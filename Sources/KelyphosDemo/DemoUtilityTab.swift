@@ -33,7 +33,6 @@ enum DemoUtilityTab: String, KelyphosPanel, CaseIterable {
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .padding(8)
             }
-            .background(Color(nsColor: .textBackgroundColor))
         case .log:
             List {
                 Label("Framework loaded", systemImage: "checkmark.circle")
@@ -45,6 +44,7 @@ enum DemoUtilityTab: String, KelyphosPanel, CaseIterable {
                 Label("2 inspector tabs registered", systemImage: "info.circle")
                     .foregroundStyle(.blue)
             }
+            .scrollContentBackground(.hidden)
         }
     }
 }

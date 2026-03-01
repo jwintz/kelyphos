@@ -16,9 +16,6 @@ public struct KelyphosContentArea<
     @State private var utilityItems: [UtilTab] = []
     @State private var utilitySelection: UtilTab?
 
-    /// Thin tint opacity layered on top of withinWindow vibrancy
-    private static var utilityTintOpacity: CGFloat { 0.08 }
-
     public init(
         state: KelyphosShellState,
         utilityTabs: [UtilTab],
@@ -39,27 +36,26 @@ public struct KelyphosContentArea<
             .frame(maxWidth: .infinity, maxHeight: .infinity)
 
             // Utility area (collapsible) — fixed height at the bottom
+            // P21b: 8pt margins outside, no padding inside, rounded top corners
             if state.utilityAreaVisible && state.utilityEnabled && !utilityTabs.isEmpty {
-                PanelDivider()
-
                 KelyphosPanelContainer(
                     items: $utilityItems,
                     selection: $utilitySelection,
                     position: .top
                 )
                 .frame(height: state.utilityAreaHeight)
-                // P21b: withinWindow vibrancy matching the shell + thin tint for differentiation
-                .background {
-                    ZStack {
-                        VibrancyBackgroundView(
-                            material: state.vibrancyMaterial.nsMaterial,
-                            blendingMode: .withinWindow,
-                            isActive: state.vibrancyMaterial != .none
-                        )
-                        Color(nsColor: state.backgroundColor)
-                            .opacity(Self.utilityTintOpacity)
-                    }
-                }
+                .clipShape(.rect(
+                    topLeadingRadius: KelyphosDesign.CornerRadius.content,
+                    topTrailingRadius: KelyphosDesign.CornerRadius.content
+                ))
+                .background(
+                    .regularMaterial,
+                    in: .rect(
+                        topLeadingRadius: KelyphosDesign.CornerRadius.content,
+                        topTrailingRadius: KelyphosDesign.CornerRadius.content
+                    )
+                )
+                .padding(.horizontal, KelyphosDesign.Padding.compact)
             }
         }
         .onAppear {

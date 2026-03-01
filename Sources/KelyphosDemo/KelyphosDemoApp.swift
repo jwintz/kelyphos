@@ -17,6 +17,15 @@ struct KelyphosDemoApp: App {
         NSApplication.shared.activate(ignoringOtherApps: true)
     }
 
+    /// Bring the main "Kelyphos Demo" window back after the welcome window is dismissed.
+    @MainActor
+    private static func showMainWindow() {
+        for window in NSApp.windows where window.title == "Kelyphos Demo" {
+            window.makeKeyAndOrderFront(nil)
+            return
+        }
+    }
+
     var body: some Scene {
         WindowGroup("Kelyphos Demo") {
             KelyphosShellView(
@@ -29,9 +38,14 @@ struct KelyphosDemoApp: App {
                 )
             )
             .onAppear {
-                // P23: Show welcome window on startup if enabled
                 if showWelcomeOnStartup {
-                    openWindow(id: "welcome")
+                    // Hide all main windows, show only the welcome window
+                    DispatchQueue.main.async {
+                        for window in NSApp.windows where window.title == "Kelyphos Demo" {
+                            window.orderOut(nil)
+                        }
+                        openWindow(id: "welcome")
+                    }
                 }
             }
         }
@@ -56,24 +70,34 @@ struct KelyphosDemoApp: App {
             }
         }
 
-        // Welcome window — title configures the display name
+        // P23b: "Show on startup" checkbox via subtitleView
         WelcomeWindow(
-            title: "Kelyphos"
+            title: "Kelyphos",
+            subtitleView: { WelcomeStartupToggle() }
         ) { dismiss in
+            WelcomeButton(
+                iconName: "play.circle",
+                title: "Continue",
+                action: {
+                    Self.showMainWindow()
+                    dismiss()
+                }
+            )
             WelcomeButton(
                 iconName: "plus.square",
                 title: "New Project",
-                action: { dismiss() }
+                action: {
+                    Self.showMainWindow()
+                    dismiss()
+                }
             )
             WelcomeButton(
                 iconName: "folder",
                 title: "Open Project",
-                action: { dismiss() }
-            )
-            WelcomeButton(
-                iconName: "arrow.down.doc",
-                title: "Clone Repository",
-                action: { dismiss() }
+                action: {
+                    Self.showMainWindow()
+                    dismiss()
+                }
             )
         }
 

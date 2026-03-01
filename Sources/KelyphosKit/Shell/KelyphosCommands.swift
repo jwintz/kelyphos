@@ -64,10 +64,14 @@ public struct KelyphosCommands: Commands {
                 utilTab(7); utilTab(8); utilTab(9)
             }
 
-            Divider()
+        }
 
+        // P27: Replace Help menu to claim CMD+? (macOS reserves CMD+SHIFT+/ for Help)
+        CommandGroup(replacing: .help) {
             Button("Keyboard Shortcuts") {
-                state.showKeybindingsOverlay.toggle()
+                withAnimation(.easeInOut(duration: 0.15)) {
+                    state.showKeybindingsOverlay.toggle()
+                }
             }
             .keyboardShortcut("/", modifiers: [.command, .shift])
         }

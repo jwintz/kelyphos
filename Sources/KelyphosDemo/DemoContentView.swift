@@ -45,7 +45,7 @@ struct DemoContentView: View {
                     shortcutRow("⌘⌥1–9", "Select Inspector Tab")
                     shortcutRow("⌘⌥⇧0", "Toggle Utility Area")
                     shortcutRow("⌘⌥⇧1–9", "Select Utility Tab")
-                    shortcutRow("⇧⌘/", "Keyboard Shortcuts")
+                    shortcutRow("⌘?", "Keyboard Shortcuts")
                     shortcutRow("⌘,", "Settings")
                 }
                 .font(.system(size: 12))
