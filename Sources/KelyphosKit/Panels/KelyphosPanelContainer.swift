@@ -22,7 +22,6 @@ public struct KelyphosPanelContainer<Tab: KelyphosPanel>: View {
         VStack(spacing: 0) {
             if position == .top {
                 KelyphosPanelTabBar(items: $items, selection: $selection, position: .top)
-                PanelDivider()
             }
 
             if let selected = selection {

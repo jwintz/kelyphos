@@ -65,6 +65,8 @@ public struct KelyphosShellView<
     public var body: some View {
         mainContent
             .navigationSplitViewStyle(.balanced)
+            .navigationTitle(state.title)
+            .navigationSubtitle(state.subtitle)
             .toolbarBackgroundVisibility(.hidden, for: .windowToolbar)
             .toolbarTitleDisplayMode(.inline)
             .toolbar { trailingToolbar }

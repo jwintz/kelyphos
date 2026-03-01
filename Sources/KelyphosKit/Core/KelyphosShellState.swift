@@ -13,6 +13,11 @@ public final class KelyphosShellState {
     /// Prefix for UserDefaults keys, preventing collisions between client apps.
     public let persistencePrefix: String
 
+    // MARK: - Title
+
+    public var title: String = ""
+    public var subtitle: String = ""
+
     // MARK: - Appearance
 
     public var backgroundColor: NSColor = .windowBackgroundColor

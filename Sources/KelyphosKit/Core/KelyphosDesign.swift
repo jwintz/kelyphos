@@ -34,7 +34,7 @@ public enum KelyphosDesign {
         public static let sidebarIdeal: CGFloat = 280
         public static let sidebarMax: CGFloat = 400
         public static let inspectorMin: CGFloat = 300
-        public static let inspectorIdeal: CGFloat = 400
+        public static let inspectorIdeal: CGFloat = 300
         public static let inspectorMax: CGFloat = 500
     }
 

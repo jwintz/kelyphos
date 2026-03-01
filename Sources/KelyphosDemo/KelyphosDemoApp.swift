@@ -38,6 +38,8 @@ struct KelyphosDemoApp: App {
                 )
             )
             .onAppear {
+                shellState.title = "Kelyphos Demo"
+                shellState.subtitle = "Untitled"
                 if showWelcomeOnStartup {
                     // Hide main window immediately (no async) to prevent flash
                     for window in NSApp.windows where window.title == "Kelyphos Demo" {
