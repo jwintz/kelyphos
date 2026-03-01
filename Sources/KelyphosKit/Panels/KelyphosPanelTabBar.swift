@@ -8,18 +8,33 @@ public enum KelyphosTabBarPosition: Sendable {
     case top
 }
 
+/// Selection indicator style for the tab bar.
+public enum KelyphosTabBarSelectionStyle: Sendable {
+    /// Frosted material — visible on vibrancy/material backgrounds (navigator, utility).
+    case material
+    /// Opaque fill — visible on solid/inspector backgrounds.
+    case opaque
+}
+
 /// Liquid glass tab bar for switching between panel tabs.
 public struct KelyphosPanelTabBar<Tab: KelyphosPanel>: View {
     @Binding var items: [Tab]
     @Binding var selection: Tab?
     var position: KelyphosTabBarPosition
+    var selectionStyle: KelyphosTabBarSelectionStyle
 
     @Namespace private var glassNamespace
 
-    public init(items: Binding<[Tab]>, selection: Binding<Tab?>, position: KelyphosTabBarPosition = .top) {
+    public init(
+        items: Binding<[Tab]>,
+        selection: Binding<Tab?>,
+        position: KelyphosTabBarPosition = .top,
+        selectionStyle: KelyphosTabBarSelectionStyle = .material
+    ) {
         self._items = items
         self._selection = selection
         self.position = position
+        self.selectionStyle = selectionStyle
     }
 
     public var body: some View {
@@ -53,8 +68,13 @@ public struct KelyphosPanelTabBar<Tab: KelyphosPanel>: View {
                         .foregroundStyle(tab == effective ? .primary : .secondary)
                         .background {
                             if tab == effective {
-                                Capsule()
-                                    .fill(.thinMaterial)
+                                switch selectionStyle {
+                                case .material:
+                                    Capsule().fill(.thinMaterial)
+                                case .opaque:
+                                    Capsule().fill(.background)
+                                        .shadow(color: .primary.opacity(0.15), radius: 1, y: 0.5)
+                                }
                             }
                         }
                         .glassEffectID("\(tab.title)", in: glassNamespace)

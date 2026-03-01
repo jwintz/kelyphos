@@ -132,7 +132,8 @@ public struct KelyphosShellView<
         KelyphosPanelContainer(
             items: $inspectorItems,
             selection: $inspectorSelection,
-            position: .top
+            position: .top,
+            selectionStyle: .opaque
         )
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .inspectorColumnWidth(ideal: KelyphosDesign.Width.inspectorIdeal)
