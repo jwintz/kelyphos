@@ -9,6 +9,8 @@ import AboutWindow
 @main
 struct KelyphosDemoApp: App {
     @State private var shellState = KelyphosShellState(persistencePrefix: "kelyphos.demo")
+    @AppStorage("kelyphos.demo.showWelcomeOnStartup") private var showWelcomeOnStartup = true
+    @Environment(\.openWindow) private var openWindow
 
     init() {
         NSApplication.shared.setActivationPolicy(.regular)
@@ -26,13 +28,32 @@ struct KelyphosDemoApp: App {
                     detail: { DemoContentView() }
                 )
             )
+            .onAppear {
+                // P23: Show welcome window on startup if enabled
+                if showWelcomeOnStartup {
+                    openWindow(id: "welcome")
+                }
+            }
         }
         .commands {
             KelyphosCommands(state: shellState)
+
+            // P24: Override default About menu to open our AboutWindow
+            CommandGroup(replacing: .appInfo) {
+                Button("About Kelyphos") {
+                    openWindow(id: "about")
+                }
+            }
         }
 
+        // P22: Tabbed settings with General + Appearance panes
         SwiftUI.Settings {
-            KelyphosSettingsView(state: shellState)
+            TabView {
+                GeneralSettingsTab()
+                    .tabItem { Label("General", systemImage: "gearshape") }
+                KelyphosSettingsView(state: shellState)
+                    .tabItem { Label("Appearance", systemImage: "paintbrush") }
+            }
         }
 
         // Welcome window — title configures the display name
@@ -60,7 +81,6 @@ struct KelyphosDemoApp: App {
         AboutWindow(title: "Kelyphos") {
             AboutButton(title: "Acknowledgements") {
                 VStack(alignment: .leading, spacing: 12) {
-                    Link("sindresorhus/Settings", destination: URL(string: "https://github.com/sindresorhus/Settings")!)
                     Link("CodeEditApp/WelcomeWindow", destination: URL(string: "https://github.com/CodeEditApp/WelcomeWindow")!)
                     Link("CodeEditApp/AboutWindow", destination: URL(string: "https://github.com/CodeEditApp/AboutWindow")!)
                 }

@@ -16,8 +16,8 @@ public struct KelyphosContentArea<
     @State private var utilityItems: [UtilTab] = []
     @State private var utilitySelection: UtilTab?
 
-    /// Utility area opacity boost over base (matching Hyalo's pattern)
-    private static var utilityOpacityBoost: CGFloat { 0.15 }
+    /// Thin tint opacity layered on top of withinWindow vibrancy
+    private static var utilityTintOpacity: CGFloat { 0.08 }
 
     public init(
         state: KelyphosShellState,
@@ -48,10 +48,17 @@ public struct KelyphosContentArea<
                     position: .top
                 )
                 .frame(height: state.utilityAreaHeight)
-                // P21: Hyalo-style denser tint — base alpha + 0.15 boost
+                // P21b: withinWindow vibrancy matching the shell + thin tint for differentiation
                 .background {
-                    Color(nsColor: state.backgroundColor)
-                        .opacity(min(1.0, Double(state.backgroundAlpha) + Self.utilityOpacityBoost))
+                    ZStack {
+                        VibrancyBackgroundView(
+                            material: state.vibrancyMaterial.nsMaterial,
+                            blendingMode: .withinWindow,
+                            isActive: state.vibrancyMaterial != .none
+                        )
+                        Color(nsColor: state.backgroundColor)
+                            .opacity(Self.utilityTintOpacity)
+                    }
                 }
             }
         }

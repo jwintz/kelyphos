@@ -3,6 +3,7 @@
 import SwiftUI
 
 /// A searchable overlay showing all registered keybindings, grouped by category.
+/// Uses a multi-column layout for efficient scanning.
 public struct KelyphosKeybindingsOverlay: View {
     @Binding var isPresented: Bool
     @State private var searchText = ""
@@ -37,7 +38,7 @@ public struct KelyphosKeybindingsOverlay: View {
             Divider()
             overlayContent
         }
-        .frame(width: 420, height: 480)
+        .frame(width: 640, height: 480)
         .background(.ultraThinMaterial, in: .rect(cornerRadius: KelyphosDesign.CornerRadius.glass))
         .shadow(color: .black.opacity(0.3), radius: 20, y: 10)
     }
@@ -73,36 +74,45 @@ public struct KelyphosKeybindingsOverlay: View {
     private var overlayContent: some View {
         let filtered = registry.search(searchText)
         let grouped = groupByCategory(filtered)
+        // Split categories into two columns
+        let (left, right) = splitColumns(grouped)
 
         return ScrollView {
-            LazyVStack(alignment: .leading, spacing: KelyphosDesign.Spacing.comfortable) {
-                ForEach(grouped, id: \.0) { category, bindings in
-                    VStack(alignment: .leading, spacing: KelyphosDesign.Spacing.compact) {
-                        Text(category)
-                            .font(.system(size: KelyphosDesign.FontSize.caption, weight: .semibold))
-                            .foregroundStyle(.tertiary)
-                            .textCase(.uppercase)
-                            .padding(.horizontal)
+            HStack(alignment: .top, spacing: KelyphosDesign.Spacing.comfortable) {
+                categoryColumn(left)
+                categoryColumn(right)
+            }
+            .padding()
+        }
+    }
 
-                        ForEach(bindings) { binding in
-                            HStack {
-                                Text(binding.label)
-                                    .font(.system(size: KelyphosDesign.FontSize.emphasized))
-                                Spacer()
-                                Text(binding.shortcut)
-                                    .font(.system(size: KelyphosDesign.FontSize.body, design: .monospaced))
-                                    .foregroundStyle(.secondary)
-                                    .padding(.horizontal, 6)
-                                    .padding(.vertical, 2)
-                                    .background(.quaternary, in: .capsule)
-                            }
-                            .padding(.horizontal)
+    private func categoryColumn(_ groups: [(String, [KelyphosKeybinding])]) -> some View {
+        VStack(alignment: .leading, spacing: KelyphosDesign.Spacing.comfortable) {
+            ForEach(groups, id: \.0) { category, bindings in
+                VStack(alignment: .leading, spacing: KelyphosDesign.Spacing.compact) {
+                    Text(category)
+                        .font(.system(size: KelyphosDesign.FontSize.caption, weight: .semibold))
+                        .foregroundStyle(.tertiary)
+                        .textCase(.uppercase)
+
+                    ForEach(bindings) { binding in
+                        HStack {
+                            Text(binding.label)
+                                .font(.system(size: KelyphosDesign.FontSize.emphasized))
+                            Spacer()
+                            Text(binding.shortcut)
+                                .font(.system(size: KelyphosDesign.FontSize.body, design: .monospaced))
+                                .foregroundStyle(.secondary)
+                                .padding(.horizontal, 6)
+                                .padding(.vertical, 2)
+                                .background(.quaternary, in: .capsule)
                         }
                     }
                 }
             }
-            .padding(.vertical)
+            Spacer(minLength: 0)
         }
+        .frame(maxWidth: .infinity, alignment: .leading)
     }
 
     private func groupByCategory(_ bindings: [KelyphosKeybinding]) -> [(String, [KelyphosKeybinding])] {
@@ -115,5 +125,25 @@ public struct KelyphosKeybindingsOverlay: View {
             }
         }
         return result
+    }
+
+    /// Split categories into two balanced columns by item count.
+    private func splitColumns(_ groups: [(String, [KelyphosKeybinding])]) -> (
+        [(String, [KelyphosKeybinding])],
+        [(String, [KelyphosKeybinding])]
+    ) {
+        let total = groups.reduce(0) { $0 + $1.1.count + 1 } // +1 for header
+        var leftCount = 0
+        var splitIndex = groups.count
+        for (i, group) in groups.enumerated() {
+            leftCount += group.1.count + 1
+            if leftCount >= total / 2 {
+                splitIndex = i + 1
+                break
+            }
+        }
+        let left = Array(groups.prefix(splitIndex))
+        let right = Array(groups.suffix(from: splitIndex))
+        return (left, right)
     }
 }

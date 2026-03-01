@@ -20,6 +20,6 @@ public struct KelyphosSettingsView: View {
             AppearanceSettingsSection(state: state)
         }
         .formStyle(.grouped)
-        .frame(width: 450)
+        .frame(width: 450, height: 200)
     }
 }

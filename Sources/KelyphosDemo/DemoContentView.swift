@@ -19,14 +19,10 @@ struct DemoContentView: View {
             Text("macOS Liquid Glass Shell Framework")
                 .foregroundStyle(.secondary)
 
-            // P14: Dynamic panel deactivation — toggles enabled flags on shell state
+            // Panel deactivation toggles (inspector + utility only)
             GroupBox("Panels") {
                 VStack(alignment: .leading, spacing: 8) {
                     if let state = shellState {
-                        Toggle("Navigator", isOn: Binding(
-                            get: { state.navigatorEnabled },
-                            set: { state.navigatorEnabled = $0 }
-                        ))
                         Toggle("Inspector", isOn: Binding(
                             get: { state.inspectorEnabled },
                             set: { state.inspectorEnabled = $0 }

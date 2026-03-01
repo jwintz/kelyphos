@@ -67,8 +67,6 @@ public struct KelyphosShellView<
             .navigationSplitViewStyle(.balanced)
             .toolbarBackgroundVisibility(.hidden, for: .windowToolbar)
             .toolbarTitleDisplayMode(.inline)
-            // P20: Hide built-in sidebar toggle when navigator is disabled
-            .toolbar(removing: state.navigatorEnabled ? nil : .sidebarToggle)
             .toolbar { trailingToolbar }
             .background { vibrancyBackground }
             .onPreferenceChange(NavigatorWidthKey.self) { state.navigatorWidth = $0 }
