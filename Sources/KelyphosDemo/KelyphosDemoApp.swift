@@ -6,15 +6,58 @@ import KelyphosKit
 import WelcomeWindow
 import AboutWindow
 
+
+
+/// Helper class that holds an observer token and can invalidate itself.
+/// Used to intercept the main window during launch and auto-remove after first fire.
+@MainActor
+private final class LaunchSuppressor: @unchecked Sendable {
+    private var observer: NSObjectProtocol?
+
+    init() {
+        // Observe willBecomeKey to hide the main window if it becomes key
+        // (backup in case onAppear hide misses it)
+        observer = NotificationCenter.default.addObserver(
+            forName: NSNotification.Name("NSWindowWillBecomeKeyNotification"),
+            object: nil,
+            queue: .main
+        ) { [weak self] notification in
+            guard let window = notification.object as? NSWindow else { return }
+            Task { @MainActor [weak self] in
+                guard let self = self,
+                      window.title == "Kelyphos Demo" else { return }
+                window.orderOut(nil)
+                self.invalidate()
+            }
+        }
+    }
+
+    func invalidate() {
+        if let observer = observer {
+            NotificationCenter.default.removeObserver(observer)
+            self.observer = nil
+        }
+    }
+}
+
 @main
 struct KelyphosDemoApp: App {
     @State private var shellState = KelyphosShellState(persistencePrefix: "kelyphos.demo")
     @AppStorage("kelyphos.demo.showWelcomeOnStartup") private var showWelcomeOnStartup = true
     @Environment(\.openWindow) private var openWindow
 
+    /// Helper that intercepts the main window appearance during launch
+    private let launchSuppressor: LaunchSuppressor?
+
     init() {
         NSApplication.shared.setActivationPolicy(.regular)
         NSApplication.shared.activate(ignoringOtherApps: true)
+
+        // Read directly from UserDefaults since @AppStorage isn't available in init
+        let shouldShowWelcome = UserDefaults.standard.bool(forKey: "kelyphos.demo.showWelcomeOnStartup")
+
+        // Intercept the main window if it becomes key (backup mechanism)
+        launchSuppressor = shouldShowWelcome ? LaunchSuppressor() : nil
     }
 
     /// Bring the main "Kelyphos Demo" window back after the welcome window is dismissed.
@@ -40,9 +83,11 @@ struct KelyphosDemoApp: App {
             .onAppear {
                 shellState.title = "Kelyphos Demo"
                 shellState.subtitle = "Untitled"
+
                 if showWelcomeOnStartup {
-                    // Hide main window immediately (no async) to prevent flash
-                    for window in NSApp.windows where window.title == "Kelyphos Demo" {
+                    // Hide the main window immediately - at this point it has empty title
+                    // but is already visible, so we detect it by visibility + empty title
+                    for window in NSApp.windows where window.isVisible && window.title.isEmpty {
                         window.orderOut(nil)
                     }
                     openWindow(id: "welcome")
