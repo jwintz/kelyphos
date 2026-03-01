@@ -35,6 +35,7 @@ public struct KelyphosPanelTabBar<Tab: KelyphosPanel>: View {
         }
     }
 
+    // P11: No glass background — tab bar is transparent, parent vibrancy shows through
     private var topBody: some View {
         GeometryReader { proxy in
             iconsView(size: proxy.size)
@@ -44,7 +45,6 @@ public struct KelyphosPanelTabBar<Tab: KelyphosPanel>: View {
         .clipped()
         .frame(maxWidth: .infinity, idealHeight: KelyphosDesign.Height.tabBar)
         .fixedSize(horizontal: false, vertical: true)
-        .glassEffect(.regular, in: .rect)
     }
 
     private var sideBody: some View {

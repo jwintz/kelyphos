@@ -1,49 +1,49 @@
 // DemoUtilityTab.swift - Sample utility panels
 
+import AppKit
 import SwiftUI
 import KelyphosKit
 
 enum DemoUtilityTab: String, KelyphosPanel, CaseIterable {
-    case console
-    case diagnostics
+    case output
+    case log
 
     nonisolated var id: String { rawValue }
 
     nonisolated var title: String {
         switch self {
-        case .console: "Console"
-        case .diagnostics: "Diagnostics"
+        case .output: "Output"
+        case .log: "Log"
         }
     }
 
     nonisolated var systemImage: String {
         switch self {
-        case .console: "terminal"
-        case .diagnostics: "exclamationmark.triangle"
+        case .output: "terminal"
+        case .log: "list.bullet.rectangle"
         }
     }
 
     var body: some View {
         switch self {
-        case .console:
+        case .output:
             ScrollView {
-                VStack(alignment: .leading) {
-                    Text("$ swift build")
-                        .font(.system(size: 11, design: .monospaced))
-                    Text("Build complete! (0.42s)")
-                        .font(.system(size: 11, design: .monospaced))
-                        .foregroundStyle(.green)
-                    Text("$")
-                        .font(.system(size: 11, design: .monospaced))
-                }
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .padding(8)
+                Text("$ swift build\nBuild complete! (0.42s)\n$ ")
+                    .font(.system(size: 11, design: .monospaced))
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(8)
             }
             .background(Color(nsColor: .textBackgroundColor))
-        case .diagnostics:
+        case .log:
             List {
-                Label("No issues", systemImage: "checkmark.circle")
+                Label("Framework loaded", systemImage: "checkmark.circle")
                     .foregroundStyle(.green)
+                Label("Window created", systemImage: "checkmark.circle")
+                    .foregroundStyle(.green)
+                Label("3 navigator tabs registered", systemImage: "info.circle")
+                    .foregroundStyle(.blue)
+                Label("2 inspector tabs registered", systemImage: "info.circle")
+                    .foregroundStyle(.blue)
             }
         }
     }

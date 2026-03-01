@@ -25,17 +25,40 @@ public final class KelyphosShellState {
 
     public var colorTheme = KelyphosColorTheme()
 
+    // MARK: - Panel Enabled (dynamic deactivation — P14)
+
+    /// When false, the navigator sidebar and its toolbar button are removed entirely.
+    public var navigatorEnabled: Bool = true
+    /// When false, the inspector panel and its toolbar button are removed entirely.
+    public var inspectorEnabled: Bool = true
+    /// When false, the utility area and its toolbar button are removed entirely.
+    public var utilityEnabled: Bool = true
+
     // MARK: - Panel Visibility
 
-    public var navigatorVisible: Bool = false
+    public var navigatorVisible: Bool = true
     public var inspectorVisible: Bool = false
-    public var utilityAreaVisible: Bool = false
+    public var utilityAreaVisible: Bool = true
 
     // MARK: - Panel Dimensions
 
     public var navigatorWidth: CGFloat = 280
     public var inspectorWidth: CGFloat = 300
     public var utilityAreaHeight: CGFloat = 260
+
+    // MARK: - Tab Selection (by index, for keyboard shortcuts)
+
+    /// Selected navigator tab index (0-based). Nil means no selection.
+    public var selectedNavigatorIndex: Int? = 0
+    /// Selected inspector tab index (0-based). Nil means no selection.
+    public var selectedInspectorIndex: Int? = 0
+    /// Selected utility tab index (0-based). Nil means no selection.
+    public var selectedUtilityIndex: Int? = 0
+
+    /// Number of tabs in each panel area (set by the shell view).
+    public var navigatorTabCount: Int = 0
+    public var inspectorTabCount: Int = 0
+    public var utilityTabCount: Int = 0
 
     // MARK: - Keybindings Overlay
 

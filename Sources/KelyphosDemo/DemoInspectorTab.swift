@@ -4,58 +4,49 @@ import SwiftUI
 import KelyphosKit
 
 enum DemoInspectorTab: String, KelyphosPanel, CaseIterable {
-    case attributes
-    case help
-    case appearance
+    case details
+    case properties
 
     nonisolated var id: String { rawValue }
 
     nonisolated var title: String {
         switch self {
-        case .attributes: "Attributes"
-        case .help: "Quick Help"
-        case .appearance: "Appearance"
+        case .details: "Details"
+        case .properties: "Properties"
         }
     }
 
     nonisolated var systemImage: String {
         switch self {
-        case .attributes: "slider.horizontal.3"
-        case .help: "questionmark.circle"
-        case .appearance: "paintbrush"
+        case .details: "info.circle"
+        case .properties: "slider.horizontal.3"
         }
     }
 
     var body: some View {
         switch self {
-        case .attributes:
+        case .details:
             Form {
-                Section("File Info") {
+                Section("Selection") {
                     LabeledContent("Name", value: "Example.swift")
+                    LabeledContent("Type", value: "Swift Source")
                     LabeledContent("Size", value: "2.4 KB")
                     LabeledContent("Modified", value: "Today")
                 }
-                Section("Properties") {
-                    Toggle("Read Only", isOn: .constant(false))
-                    Toggle("Hidden", isOn: .constant(false))
+            }
+            .formStyle(.grouped)
+        case .properties:
+            Form {
+                Section("Display") {
+                    Toggle("Show Line Numbers", isOn: .constant(true))
+                    Toggle("Word Wrap", isOn: .constant(false))
+                }
+                Section("Behavior") {
+                    Toggle("Auto-save", isOn: .constant(true))
+                    Toggle("Trim Whitespace", isOn: .constant(true))
                 }
             }
             .formStyle(.grouped)
-        case .help:
-            VStack(alignment: .leading, spacing: 12) {
-                Text("Quick Help")
-                    .font(.headline)
-                    .padding(.horizontal)
-                Text("Select a symbol to see documentation.")
-                    .foregroundStyle(.secondary)
-                    .padding(.horizontal)
-                Spacer()
-            }
-            .padding(.top)
-        case .appearance:
-            Text("Appearance settings are in ⌘, Preferences")
-                .foregroundStyle(.secondary)
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
     }
 }

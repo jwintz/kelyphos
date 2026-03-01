@@ -4,54 +4,64 @@ import SwiftUI
 import KelyphosKit
 
 enum DemoNavigatorTab: String, KelyphosPanel, CaseIterable {
-    case files
+    case explore
     case search
-    case git
+    case bookmarks
 
     nonisolated var id: String { rawValue }
 
     nonisolated var title: String {
         switch self {
-        case .files: "Files"
+        case .explore: "Explore"
         case .search: "Search"
-        case .git: "Source Control"
+        case .bookmarks: "Bookmarks"
         }
     }
 
     nonisolated var systemImage: String {
         switch self {
-        case .files: "doc.on.doc"
+        case .explore: "folder"
         case .search: "magnifyingglass"
-        case .git: "point.3.filled.connected.trianglepath.dotted"
+        case .bookmarks: "bookmark"
         }
     }
 
     var body: some View {
         switch self {
-        case .files:
+        case .explore:
             List {
-                Label("Package.swift", systemImage: "swift")
-                Label("Sources/", systemImage: "folder")
-                Label("Tests/", systemImage: "folder")
-                Label("README.md", systemImage: "doc.text")
+                Section("Project") {
+                    Label("Sources", systemImage: "folder.fill")
+                    Label("Resources", systemImage: "folder.fill")
+                    Label("Tests", systemImage: "folder.fill")
+                }
+                Section("Files") {
+                    Label("Package.swift", systemImage: "doc.text")
+                    Label("README.md", systemImage: "doc.text")
+                    Label("LICENSE", systemImage: "doc.text")
+                }
             }
             .listStyle(.sidebar)
         case .search:
-            VStack {
+            VStack(spacing: 12) {
                 TextField("Search…", text: .constant(""))
                     .textFieldStyle(.roundedBorder)
-                    .padding()
+                    .padding(.horizontal)
+                    .padding(.top)
                 Spacer()
-                Text("Enter a search term")
+                Image(systemName: "magnifyingglass")
+                    .font(.system(size: 32))
+                    .foregroundStyle(.quaternary)
+                Text("Type to search")
+                    .font(.caption)
                     .foregroundStyle(.secondary)
                 Spacer()
             }
-        case .git:
+        case .bookmarks:
             List {
-                Section("Changes") {
-                    Label("Modified: AppDelegate.swift", systemImage: "pencil.circle")
-                    Label("Added: NewFile.swift", systemImage: "plus.circle")
-                }
+                Label("Getting Started", systemImage: "star")
+                Label("API Reference", systemImage: "star")
+                Label("Architecture", systemImage: "star")
             }
             .listStyle(.sidebar)
         }

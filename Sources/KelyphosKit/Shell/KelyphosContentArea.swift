@@ -1,41 +1,45 @@
-// KelyphosContentArea.swift - Center area with optional utility panel
+// KelyphosContentArea.swift - Center detail area with optional utility panel
 
+import AppKit
 import SwiftUI
 
-/// The center content area with optional collapsible utility panel at the bottom.
+/// The detail content area: scrollable main view + optional utility panel at the bottom.
+/// Lives inside the NavigationSplitView detail column.
 public struct KelyphosContentArea<
     UtilTab: KelyphosPanel,
-    Detail: View,
-    StatusBar: View
+    Detail: View
 >: View {
     @Bindable var state: KelyphosShellState
     var utilityTabs: [UtilTab]
     var detail: () -> Detail
-    var statusBar: (() -> StatusBar)?
 
     @State private var utilityItems: [UtilTab] = []
     @State private var utilitySelection: UtilTab?
 
+    /// Utility area opacity boost over base (matching Hyalo's pattern)
+    private static var utilityOpacityBoost: CGFloat { 0.15 }
+
     public init(
         state: KelyphosShellState,
         utilityTabs: [UtilTab],
-        @ViewBuilder detail: @escaping () -> Detail,
-        statusBar: (() -> StatusBar)? = nil
+        @ViewBuilder detail: @escaping () -> Detail
     ) {
         self.state = state
         self.utilityTabs = utilityTabs
         self.detail = detail
-        self.statusBar = statusBar
     }
 
     public var body: some View {
         VStack(spacing: 0) {
-            // Main detail content
-            detail()
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
+            // Scrollable main content — avoids imposing size constraints
+            ScrollView {
+                detail()
+                    .frame(maxWidth: .infinity)
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
 
-            // Utility area (collapsible)
-            if state.utilityAreaVisible && !utilityTabs.isEmpty {
+            // Utility area (collapsible) — fixed height at the bottom
+            if state.utilityAreaVisible && state.utilityEnabled && !utilityTabs.isEmpty {
                 PanelDivider()
 
                 KelyphosPanelContainer(
@@ -44,13 +48,11 @@ public struct KelyphosContentArea<
                     position: .top
                 )
                 .frame(height: state.utilityAreaHeight)
-            }
-
-            // Status bar
-            if let statusBar {
-                PanelDivider()
-                statusBar()
-                    .frame(height: KelyphosDesign.Height.statusBar)
+                // P21: Hyalo-style denser tint — base alpha + 0.15 boost
+                .background {
+                    Color(nsColor: state.backgroundColor)
+                        .opacity(min(1.0, Double(state.backgroundAlpha) + Self.utilityOpacityBoost))
+                }
             }
         }
         .onAppear {
@@ -58,6 +60,10 @@ public struct KelyphosContentArea<
             if utilitySelection == nil {
                 utilitySelection = utilityTabs.first
             }
+        }
+        .onChange(of: state.selectedUtilityIndex) { _, newIndex in
+            guard let idx = newIndex, idx >= 0, idx < utilityItems.count else { return }
+            utilitySelection = utilityItems[idx]
         }
     }
 }

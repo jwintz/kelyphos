@@ -2,6 +2,20 @@
 
 import SwiftUI
 
+// MARK: - Environment Key
+
+private struct KelyphosKeybindingRegistryKey: @preconcurrency EnvironmentKey {
+    @MainActor static let defaultValue = KelyphosKeybindingRegistry()
+}
+
+extension EnvironmentValues {
+    /// The shared keybinding registry, injected by KelyphosShellView.
+    public var kelyphosKeybindingRegistry: KelyphosKeybindingRegistry {
+        get { self[KelyphosKeybindingRegistryKey.self] }
+        set { self[KelyphosKeybindingRegistryKey.self] = newValue }
+    }
+}
+
 /// A registry of keybindings, grouped by category.
 /// Client apps register their keybindings at startup.
 @MainActor
@@ -10,10 +24,41 @@ public final class KelyphosKeybindingRegistry {
     public var bindings: [KelyphosKeybinding] = []
 
     public init() {
-        // Register built-in shell keybindings
-        register(category: "Shell", label: "Show Keybindings", shortcut: "⌘?")
-        register(category: "Shell", label: "Toggle Navigator", shortcut: "⌘1")
-        register(category: "Shell", label: "Toggle Inspector", shortcut: "⌘⌥0")
+        registerDefaults()
+    }
+
+    private func registerDefaults() {
+        register(category: "Navigator", label: "Toggle Navigator", shortcut: "⌘0")
+        register(category: "Navigator", label: "Navigator Tab 1", shortcut: "⌘1")
+        register(category: "Navigator", label: "Navigator Tab 2", shortcut: "⌘2")
+        register(category: "Navigator", label: "Navigator Tab 3", shortcut: "⌘3")
+        register(category: "Navigator", label: "Navigator Tab 4", shortcut: "⌘4")
+        register(category: "Navigator", label: "Navigator Tab 5", shortcut: "⌘5")
+        register(category: "Navigator", label: "Navigator Tab 6", shortcut: "⌘6")
+        register(category: "Navigator", label: "Navigator Tab 7", shortcut: "⌘7")
+        register(category: "Navigator", label: "Navigator Tab 8", shortcut: "⌘8")
+        register(category: "Navigator", label: "Navigator Tab 9", shortcut: "⌘9")
+        register(category: "Inspector", label: "Toggle Inspector", shortcut: "⌘⌥0")
+        register(category: "Inspector", label: "Inspector Tab 1", shortcut: "⌘⌥1")
+        register(category: "Inspector", label: "Inspector Tab 2", shortcut: "⌘⌥2")
+        register(category: "Inspector", label: "Inspector Tab 3", shortcut: "⌘⌥3")
+        register(category: "Inspector", label: "Inspector Tab 4", shortcut: "⌘⌥4")
+        register(category: "Inspector", label: "Inspector Tab 5", shortcut: "⌘⌥5")
+        register(category: "Inspector", label: "Inspector Tab 6", shortcut: "⌘⌥6")
+        register(category: "Inspector", label: "Inspector Tab 7", shortcut: "⌘⌥7")
+        register(category: "Inspector", label: "Inspector Tab 8", shortcut: "⌘⌥8")
+        register(category: "Inspector", label: "Inspector Tab 9", shortcut: "⌘⌥9")
+        register(category: "Utility", label: "Toggle Utility Area", shortcut: "⌘⌥⇧0")
+        register(category: "Utility", label: "Utility Tab 1", shortcut: "⌘⌥⇧1")
+        register(category: "Utility", label: "Utility Tab 2", shortcut: "⌘⌥⇧2")
+        register(category: "Utility", label: "Utility Tab 3", shortcut: "⌘⌥⇧3")
+        register(category: "Utility", label: "Utility Tab 4", shortcut: "⌘⌥⇧4")
+        register(category: "Utility", label: "Utility Tab 5", shortcut: "⌘⌥⇧5")
+        register(category: "Utility", label: "Utility Tab 6", shortcut: "⌘⌥⇧6")
+        register(category: "Utility", label: "Utility Tab 7", shortcut: "⌘⌥⇧7")
+        register(category: "Utility", label: "Utility Tab 8", shortcut: "⌘⌥⇧8")
+        register(category: "Utility", label: "Utility Tab 9", shortcut: "⌘⌥⇧9")
+        register(category: "Shell", label: "Keyboard Shortcuts", shortcut: "⇧⌘/")
         register(category: "Shell", label: "Settings", shortcut: "⌘,")
     }
 

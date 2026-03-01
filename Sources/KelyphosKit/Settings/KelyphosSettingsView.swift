@@ -1,4 +1,4 @@
-// KelyphosSettingsView.swift - Settings form wrapper
+// KelyphosSettingsView.swift - Standard macOS settings form
 
 import SwiftUI
 
@@ -20,8 +20,6 @@ public struct KelyphosSettingsView: View {
             AppearanceSettingsSection(state: state)
         }
         .formStyle(.grouped)
-        .scrollContentBackground(.hidden)
-        .font(.system(size: KelyphosDesign.FontSize.emphasized))
         .frame(width: 450)
     }
 }

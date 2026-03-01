@@ -23,16 +23,15 @@ private struct InspectorWidthKey: PreferenceKey {
 // MARK: - Shell View
 
 /// The main Kelyphos shell: NavigationSplitView with navigator sidebar,
-/// detail area (with optional utility panel), and inspector.
+/// detail area (with scrollable content + utility panel), and inspector.
 public struct KelyphosShellView<
     NavTab: KelyphosPanel,
     InspTab: KelyphosPanel,
     UtilTab: KelyphosPanel,
-    Detail: View,
-    StatusBar: View
+    Detail: View
 >: View {
     @Bindable var state: KelyphosShellState
-    let configuration: KelyphosShellConfiguration<NavTab, InspTab, UtilTab, Detail, StatusBar>
+    let configuration: KelyphosShellConfiguration<NavTab, InspTab, UtilTab, Detail>
 
     @State private var columnVisibility: NavigationSplitViewVisibility = .detailOnly
     @State private var didAppear = false
@@ -46,7 +45,7 @@ public struct KelyphosShellView<
 
     private var inspectorVisibleBinding: Binding<Bool> {
         Binding(
-            get: { state.inspectorVisible },
+            get: { state.inspectorVisible && state.inspectorEnabled },
             set: { newValue in
                 withAnimation(.easeInOut(duration: 0.15)) {
                     state.inspectorVisible = newValue
@@ -57,7 +56,7 @@ public struct KelyphosShellView<
 
     public init(
         state: KelyphosShellState,
-        configuration: KelyphosShellConfiguration<NavTab, InspTab, UtilTab, Detail, StatusBar>
+        configuration: KelyphosShellConfiguration<NavTab, InspTab, UtilTab, Detail>
     ) {
         self.state = state
         self.configuration = configuration
@@ -66,10 +65,10 @@ public struct KelyphosShellView<
     public var body: some View {
         mainContent
             .navigationSplitViewStyle(.balanced)
-            // P6: Always hide toolbar background — let vibrancy show through
             .toolbarBackgroundVisibility(.hidden, for: .windowToolbar)
             .toolbarTitleDisplayMode(.inline)
-            // P2: No custom navigator toggle — NavigationSplitView provides its own
+            // P20: Hide built-in sidebar toggle when navigator is disabled
+            .toolbar(removing: state.navigatorEnabled ? nil : .sidebarToggle)
             .toolbar { trailingToolbar }
             .background { vibrancyBackground }
             .onPreferenceChange(NavigatorWidthKey.self) { state.navigatorWidth = $0 }
@@ -87,6 +86,7 @@ public struct KelyphosShellView<
             ))
             .overlay { keybindingsOverlay }
             .environment(\.kelyphosShellState, state)
+            .environment(\.kelyphosKeybindingRegistry, KelyphosKeybindingRegistry())
     }
 
     // MARK: - Main Content
@@ -99,7 +99,6 @@ public struct KelyphosShellView<
         }
     }
 
-    // P1: sidebar content fills available height
     private var sidebarContent: some View {
         KelyphosPanelContainer(
             items: $navigatorItems,
@@ -107,11 +106,7 @@ public struct KelyphosShellView<
             position: .top
         )
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .navigationSplitViewColumnWidth(
-            min: KelyphosDesign.Width.sidebarMin,
-            ideal: KelyphosDesign.Width.sidebarIdeal,
-            max: KelyphosDesign.Width.sidebarMax
-        )
+        .navigationSplitViewColumnWidth(ideal: KelyphosDesign.Width.sidebarIdeal)
         .background {
             GeometryReader { geo in
                 Color.clear
@@ -120,12 +115,12 @@ public struct KelyphosShellView<
         }
     }
 
+    // Detail content: scrollable main view + utility panel, wrapped with inspector
     private var detailContent: some View {
         KelyphosContentArea(
             state: state,
             utilityTabs: configuration.utilityTabs,
-            detail: configuration.detail,
-            statusBar: configuration.statusBar
+            detail: configuration.detail
         )
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .inspector(isPresented: inspectorVisibleBinding) {
@@ -140,11 +135,7 @@ public struct KelyphosShellView<
             position: .top
         )
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .inspectorColumnWidth(
-            min: KelyphosDesign.Width.inspectorMin,
-            ideal: KelyphosDesign.Width.inspectorIdeal,
-            max: KelyphosDesign.Width.inspectorMax
-        )
+        .inspectorColumnWidth(ideal: KelyphosDesign.Width.inspectorIdeal)
         .background {
             GeometryReader { geo in
                 Color.clear
@@ -153,36 +144,40 @@ public struct KelyphosShellView<
         }
     }
 
-    // MARK: - Toolbar (trailing items only — P2: no navigator toggle)
+    // MARK: - Toolbar (P14: conditional on enabled flags)
 
     @ToolbarContentBuilder
     private var trailingToolbar: some ToolbarContent {
         ToolbarSpacer(.flexible)
 
-        // Utility area toggle
-        ToolbarItem {
-            Button {
-                withAnimation(.easeInOut(duration: 0.15)) {
-                    state.utilityAreaVisible.toggle()
+        // Utility area toggle — only shown when utility is enabled
+        if state.utilityEnabled && !configuration.utilityTabs.isEmpty {
+            ToolbarItem {
+                Button {
+                    withAnimation(.easeInOut(duration: 0.15)) {
+                        state.utilityAreaVisible.toggle()
+                    }
+                } label: {
+                    Image(systemName: "rectangle.bottomthird.inset.filled")
                 }
-            } label: {
-                Image(systemName: "rectangle.bottomthird.inset.filled")
+                .help(state.utilityAreaVisible ? "Hide Utility Area" : "Show Utility Area")
             }
-            .help(state.utilityAreaVisible ? "Hide Utility Area" : "Show Utility Area")
         }
 
-        // Inspector toggle
-        ToolbarItem {
-            Button {
-                withAnimation(.easeInOut(duration: 0.15)) {
-                    state.inspectorVisible.toggle()
+        // Inspector toggle — only shown when inspector is enabled
+        if state.inspectorEnabled && !configuration.inspectorTabs.isEmpty {
+            ToolbarItem {
+                Button {
+                    withAnimation(.easeInOut(duration: 0.15)) {
+                        state.inspectorVisible.toggle()
+                    }
+                } label: {
+                    Image(systemName: "sidebar.right")
                 }
-            } label: {
-                Image(systemName: "sidebar.right")
+                .buttonStyle(.bordered)
+                .fixedSize()
+                .help(state.inspectorVisible ? "Hide Inspector" : "Show Inspector")
             }
-            .buttonStyle(.bordered)
-            .fixedSize()
-            .help(state.inspectorVisible ? "Hide Inspector" : "Show Inspector")
         }
 
         ToolbarSpacer(.fixed)
@@ -215,13 +210,11 @@ public struct KelyphosShellView<
 
 // MARK: - Lifecycle Modifier
 
-/// Extracted lifecycle modifiers to reduce type-checker complexity.
 private struct ShellLifecycleModifier<
     NavTab: KelyphosPanel,
     InspTab: KelyphosPanel,
     UtilTab: KelyphosPanel,
-    Detail: View,
-    StatusBar: View
+    Detail: View
 >: ViewModifier {
     @Bindable var state: KelyphosShellState
     @Binding var columnVisibility: NavigationSplitViewVisibility
@@ -230,7 +223,7 @@ private struct ShellLifecycleModifier<
     @Binding var navigatorSelection: NavTab?
     @Binding var inspectorItems: [InspTab]
     @Binding var inspectorSelection: InspTab?
-    let configuration: KelyphosShellConfiguration<NavTab, InspTab, UtilTab, Detail, StatusBar>
+    let configuration: KelyphosShellConfiguration<NavTab, InspTab, UtilTab, Detail>
     let appearanceObserver: AppearanceObserver
 
     func body(content: Content) -> some View {
@@ -241,6 +234,10 @@ private struct ShellLifecycleModifier<
                 if navigatorSelection == nil { navigatorSelection = navigatorItems.first }
                 if inspectorSelection == nil { inspectorSelection = inspectorItems.first }
 
+                state.navigatorTabCount = navigatorItems.count
+                state.inspectorTabCount = inspectorItems.count
+                state.utilityTabCount = configuration.utilityTabs.count
+
                 var transaction = Transaction()
                 transaction.disablesAnimations = true
                 withTransaction(transaction) {
@@ -248,6 +245,36 @@ private struct ShellLifecycleModifier<
                 }
                 DispatchQueue.main.async { didAppear = true }
                 appearanceObserver.start(updating: state.colorTheme)
+            }
+            // Sync index-based tab selection from keyboard shortcuts
+            .onChange(of: state.selectedNavigatorIndex) { _, newIndex in
+                guard let idx = newIndex, idx >= 0, idx < navigatorItems.count else { return }
+                navigatorSelection = navigatorItems[idx]
+            }
+            .onChange(of: state.selectedInspectorIndex) { _, newIndex in
+                guard let idx = newIndex, idx >= 0, idx < inspectorItems.count else { return }
+                inspectorSelection = inspectorItems[idx]
+            }
+            // Sync selection back to state index (for toggle-if-current)
+            .onChange(of: navigatorSelection) { _, newSel in
+                if let sel = newSel, let idx = navigatorItems.firstIndex(of: sel) {
+                    state.selectedNavigatorIndex = idx
+                }
+            }
+            .onChange(of: inspectorSelection) { _, newSel in
+                if let sel = newSel, let idx = inspectorItems.firstIndex(of: sel) {
+                    state.selectedInspectorIndex = idx
+                }
+            }
+            // P14: When a panel is disabled, force it closed
+            .onChange(of: state.navigatorEnabled) { _, enabled in
+                if !enabled { state.navigatorVisible = false }
+            }
+            .onChange(of: state.inspectorEnabled) { _, enabled in
+                if !enabled { state.inspectorVisible = false }
+            }
+            .onChange(of: state.utilityEnabled) { _, enabled in
+                if !enabled { state.utilityAreaVisible = false }
             }
             .onChange(of: state.navigatorVisible) { _, isVisible in
                 let target: NavigationSplitViewVisibility = isVisible ? .all : .detailOnly
@@ -271,7 +298,6 @@ private struct ShellLifecycleModifier<
                     state.navigatorVisible = isVisible
                 }
             }
-            // P5: Use NSApp.appearance for whole-app appearance change
             .onChange(of: state.windowAppearance) { _, newValue in
                 applyAppearance(newValue)
             }
@@ -290,7 +316,6 @@ private struct ShellLifecycleModifier<
         case "dark": nsAppearance = NSAppearance(named: .darkAqua)
         default: nsAppearance = nil
         }
-        // P5: Set on NSApp, not mainWindow — works for swift run apps
         NSApp.appearance = nsAppearance
         state.colorTheme.refreshAppearance()
         state.saveAppearance()

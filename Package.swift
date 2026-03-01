@@ -10,6 +10,10 @@ let package = Package(
     products: [
         .library(name: "KelyphosKit", targets: ["KelyphosKit"])
     ],
+    dependencies: [
+        .package(url: "https://github.com/CodeEditApp/WelcomeWindow.git", from: "1.1.0"),
+        .package(url: "https://github.com/CodeEditApp/AboutWindow.git", from: "1.0.1"),
+    ],
     targets: [
         .target(
             name: "KelyphosKit",
@@ -17,7 +21,11 @@ let package = Package(
         ),
         .executableTarget(
             name: "KelyphosDemo",
-            dependencies: ["KelyphosKit"],
+            dependencies: [
+                "KelyphosKit",
+                "WelcomeWindow",
+                "AboutWindow",
+            ],
             path: "Sources/KelyphosDemo"
         ),
         .testTarget(

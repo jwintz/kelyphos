@@ -11,9 +11,9 @@ struct KelyphosShellStateTests {
         let state = KelyphosShellState(persistencePrefix: "test")
         #expect(state.backgroundAlpha == 0.5)
         #expect(state.vibrancyMaterial == .ultraThin)
-        #expect(state.navigatorVisible == false)
+        #expect(state.navigatorVisible == true)
         #expect(state.inspectorVisible == false)
-        #expect(state.utilityAreaVisible == false)
+        #expect(state.utilityAreaVisible == true)
         #expect(state.decorationsVisible == true)
         #expect(state.persistencePrefix == "test")
     }

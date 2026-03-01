@@ -1,8 +1,10 @@
-// KelyphosDemoApp.swift - @main with WindowGroup + Settings
+// KelyphosDemoApp.swift - @main with WindowGroup + Settings + Welcome + About
 
 import AppKit
 import SwiftUI
 import KelyphosKit
+import WelcomeWindow
+import AboutWindow
 
 @main
 struct KelyphosDemoApp: App {
@@ -21,60 +23,49 @@ struct KelyphosDemoApp: App {
                     navigatorTabs: DemoNavigatorTab.allCases.map { $0 },
                     inspectorTabs: DemoInspectorTab.allCases.map { $0 },
                     utilityTabs: DemoUtilityTab.allCases.map { $0 },
-                    detail: { DemoContentView() },
-                    statusBar: { DemoStatusBar(state: shellState) }
+                    detail: { DemoContentView() }
                 )
             )
-            .frame(minWidth: 800, minHeight: 500)
         }
         .commands {
-            // P3: Proper keyboard shortcuts via menu commands
             KelyphosCommands(state: shellState)
         }
 
-        Settings {
+        SwiftUI.Settings {
             KelyphosSettingsView(state: shellState)
         }
-    }
-}
 
-// MARK: - Demo Status Bar (P7)
-
-struct DemoStatusBar: View {
-    @Bindable var state: KelyphosShellState
-
-    var body: some View {
-        HStack(spacing: KelyphosDesign.Spacing.standard) {
-            Text("Ready")
-                .font(.system(size: KelyphosDesign.FontSize.body))
-                .foregroundStyle(.secondary)
-
-            Spacer()
-
-            Text("UTF-8")
-                .font(.system(size: KelyphosDesign.FontSize.body))
-                .foregroundStyle(.secondary)
-
-            Divider().frame(maxHeight: 12)
-
-            Text("LF")
-                .font(.system(size: KelyphosDesign.FontSize.body))
-                .foregroundStyle(.secondary)
-
-            Divider().frame(maxHeight: 12)
-
-            Button {
-                withAnimation(.easeInOut(duration: 0.15)) {
-                    state.utilityAreaVisible.toggle()
-                }
-            } label: {
-                Image(systemName: "rectangle.bottomthird.inset.filled")
-                    .font(.system(size: KelyphosDesign.FontSize.body))
-                    .foregroundStyle(state.utilityAreaVisible ? .primary : .secondary)
-            }
-            .buttonStyle(.plain)
-            .help(state.utilityAreaVisible ? "Hide Utility Area" : "Show Utility Area")
+        // Welcome window — title configures the display name
+        WelcomeWindow(
+            title: "Kelyphos"
+        ) { dismiss in
+            WelcomeButton(
+                iconName: "plus.square",
+                title: "New Project",
+                action: { dismiss() }
+            )
+            WelcomeButton(
+                iconName: "folder",
+                title: "Open Project",
+                action: { dismiss() }
+            )
+            WelcomeButton(
+                iconName: "arrow.down.doc",
+                title: "Clone Repository",
+                action: { dismiss() }
+            )
         }
-        .padding(.horizontal, KelyphosDesign.Padding.horizontal)
+
+        // About window
+        AboutWindow(title: "Kelyphos") {
+            AboutButton(title: "Acknowledgements") {
+                VStack(alignment: .leading, spacing: 12) {
+                    Link("sindresorhus/Settings", destination: URL(string: "https://github.com/sindresorhus/Settings")!)
+                    Link("CodeEditApp/WelcomeWindow", destination: URL(string: "https://github.com/CodeEditApp/WelcomeWindow")!)
+                    Link("CodeEditApp/AboutWindow", destination: URL(string: "https://github.com/CodeEditApp/AboutWindow")!)
+                }
+                .padding()
+            }
+        }
     }
 }
