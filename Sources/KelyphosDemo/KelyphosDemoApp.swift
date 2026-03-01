@@ -39,13 +39,11 @@ struct KelyphosDemoApp: App {
             )
             .onAppear {
                 if showWelcomeOnStartup {
-                    // Hide all main windows, show only the welcome window
-                    DispatchQueue.main.async {
-                        for window in NSApp.windows where window.title == "Kelyphos Demo" {
-                            window.orderOut(nil)
-                        }
-                        openWindow(id: "welcome")
+                    // Hide main window immediately (no async) to prevent flash
+                    for window in NSApp.windows where window.title == "Kelyphos Demo" {
+                        window.orderOut(nil)
                     }
+                    openWindow(id: "welcome")
                 }
             }
         }

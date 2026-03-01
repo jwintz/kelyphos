@@ -16,7 +16,7 @@ public struct KelyphosKeybindingsOverlay: View {
     public var body: some View {
         ZStack {
             // Dimmed background — tapping dismisses
-            Color.black.opacity(0.3)
+            Color.black.opacity(0.4)
                 .ignoresSafeArea()
                 .onTapGesture { isPresented = false }
 
@@ -39,7 +39,7 @@ public struct KelyphosKeybindingsOverlay: View {
             overlayContent
         }
         .frame(width: 640, height: 480)
-        .background(.ultraThinMaterial, in: .rect(cornerRadius: KelyphosDesign.CornerRadius.glass))
+        .background(.thickMaterial, in: .rect(cornerRadius: KelyphosDesign.CornerRadius.glass))
         .shadow(color: .black.opacity(0.3), radius: 20, y: 10)
     }
 

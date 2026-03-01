@@ -319,11 +319,24 @@ private struct ShellLifecycleModifier<
 
     /// Install NSEvent local monitor to intercept CMD+SHIFT+/ before macOS Help menu.
     private func installKeyMonitor() {
+        print("[Kelyphos] Installing key monitor for CMD+SHIFT+/")
         keyMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { event in
-            // CMD+SHIFT+/ → "/" with shift flag
             let flags = event.modifierFlags.intersection(.deviceIndependentFlagsMask)
-            if event.charactersIgnoringModifiers == "/" && flags == [.command, .shift] {
-                print("[Kelyphos] CMD+SHIFT+/ intercepted — toggling keybindings overlay")
+            let chars = event.charactersIgnoringModifiers ?? "<nil>"
+            let keyCode = event.keyCode
+
+            // Log all CMD+SHIFT combos for debugging
+            if flags.contains(.command) && flags.contains(.shift) {
+                print("[Kelyphos] CMD+SHIFT key event: chars='\(chars)' keyCode=\(keyCode) flags=\(flags.rawValue)")
+            }
+
+            // keyCode 44 = "/" on US keyboard (the physical key)
+            // charactersIgnoringModifiers may report "?" when shift is held
+            let isSlashKey = keyCode == 44
+            let isCmdShift = flags == [.command, .shift]
+
+            if isSlashKey && isCmdShift {
+                print("[Kelyphos] CMD+SHIFT+/ intercepted — toggling keybindings overlay (current: \(state.showKeybindingsOverlay))")
                 withAnimation(.easeInOut(duration: 0.15)) {
                     state.showKeybindingsOverlay.toggle()
                 }
@@ -331,6 +344,7 @@ private struct ShellLifecycleModifier<
             }
             return event
         }
+        print("[Kelyphos] Key monitor installed: \(keyMonitor != nil)")
     }
 
     private func applyAppearance(_ mode: String) {
