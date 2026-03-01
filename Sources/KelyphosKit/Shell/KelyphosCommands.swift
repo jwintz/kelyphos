@@ -66,15 +66,10 @@ public struct KelyphosCommands: Commands {
 
         }
 
-        // P27: Replace Help menu to claim CMD+? (macOS reserves CMD+SHIFT+/ for Help)
-        CommandGroup(replacing: .help) {
-            Button("Keyboard Shortcuts") {
-                withAnimation(.easeInOut(duration: 0.15)) {
-                    state.showKeybindingsOverlay.toggle()
-                }
-            }
-            .keyboardShortcut("/", modifiers: [.command, .shift])
-        }
+        // P27: Remove Help menu entirely so CMD+SHIFT+/ doesn't get intercepted.
+        // The actual keybindings overlay shortcut is handled via NSEvent monitor
+        // in KelyphosShellView (ShellLifecycleModifier).
+        CommandGroup(replacing: .help) { }
     }
 
     // MARK: - Tab Button Helpers (P16: toggle-if-current)

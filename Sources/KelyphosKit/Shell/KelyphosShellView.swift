@@ -224,6 +224,10 @@ private struct ShellLifecycleModifier<
     let configuration: KelyphosShellConfiguration<NavTab, InspTab, UtilTab, Detail>
     let appearanceObserver: AppearanceObserver
 
+    /// NSEvent monitor for CMD+SHIFT+/ (keybindings overlay).
+    /// macOS reserves this for the Help menu — we intercept it before the system.
+    @State private var keyMonitor: Any?
+
     func body(content: Content) -> some View {
         content
             .onAppear {
@@ -243,6 +247,12 @@ private struct ShellLifecycleModifier<
                 }
                 DispatchQueue.main.async { didAppear = true }
                 appearanceObserver.start(updating: state.colorTheme)
+                installKeyMonitor()
+            }
+            .onDisappear {
+                if let monitor = keyMonitor {
+                    NSEvent.removeMonitor(monitor)
+                }
             }
             // Sync index-based tab selection from keyboard shortcuts
             .onChange(of: state.selectedNavigatorIndex) { _, newIndex in
@@ -305,6 +315,22 @@ private struct ShellLifecycleModifier<
             .onChange(of: state.vibrancyMaterial) { _, _ in
                 state.saveAppearance()
             }
+    }
+
+    /// Install NSEvent local monitor to intercept CMD+SHIFT+/ before macOS Help menu.
+    private func installKeyMonitor() {
+        keyMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { event in
+            // CMD+SHIFT+/ → "/" with shift flag
+            let flags = event.modifierFlags.intersection(.deviceIndependentFlagsMask)
+            if event.charactersIgnoringModifiers == "/" && flags == [.command, .shift] {
+                print("[Kelyphos] CMD+SHIFT+/ intercepted — toggling keybindings overlay")
+                withAnimation(.easeInOut(duration: 0.15)) {
+                    state.showKeybindingsOverlay.toggle()
+                }
+                return nil // consume the event
+            }
+            return event
+        }
     }
 
     private func applyAppearance(_ mode: String) {
