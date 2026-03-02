@@ -72,7 +72,6 @@ public struct KelyphosShellView<
             #if os(macOS)
             .navigationTitle(state.title)
             .navigationSubtitle(state.subtitle)
-            .toolbarBackgroundVisibility(.hidden, for: .windowToolbar)
             .toolbarTitleDisplayMode(.inline)
             .toolbar { trailingToolbar }
             #endif
