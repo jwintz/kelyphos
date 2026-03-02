@@ -1,0 +1,100 @@
+name: Kelyphos
+options:
+  bundleIdPrefix: com.syntropment.kelyphos
+  deploymentTarget:
+    macOS: "26.0"
+  xcodeVersion: "26.0"
+  generateEmptyDirectories: false
+  createIntermediateGroups: true
+  defaultConfig: Debug
+
+settings:
+  base:
+    SWIFT_VERSION: "6.0"
+    MACOSX_DEPLOYMENT_TARGET: "26.0"
+    DEVELOPMENT_TEAM: H4T77W7K9A
+    CODE_SIGN_STYLE: Automatic
+
+packages:
+  WelcomeWindow:
+    url: https://github.com/CodeEditApp/WelcomeWindow.git
+    from: "1.1.0"
+  AboutWindow:
+    url: https://github.com/CodeEditApp/AboutWindow.git
+    from: "1.0.1"
+
+targets:
+  KelyphosDemo:
+    type: application
+    platform: macOS
+    sources:
+      - Sources/KelyphosDemo
+      - path: Kelyphos.icns
+        buildPhase: resources
+    dependencies:
+      - target: KelyphosKit
+        embed: false
+      - target: KelyphosWidget
+        embed: true
+      - package: WelcomeWindow
+      - package: AboutWindow
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.syntropment.kelyphos.demo
+        PRODUCT_NAME: KelyphosDemo
+        GENERATE_INFOPLIST_FILE: true
+        CURRENT_PROJECT_VERSION: 1
+        MARKETING_VERSION: "1.0"
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        INFOPLIST_KEY_CFBundleIconFile: Kelyphos
+
+  KelyphosKit:
+    type: framework
+    platform: macOS
+    sources:
+      - Sources/KelyphosKit
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.syntropment.kelyphos.kit
+        PRODUCT_NAME: KelyphosKit
+        GENERATE_INFOPLIST_FILE: true
+
+  KelyphosWidget:
+    type: app-extension
+    platform: macOS
+    sources:
+      - Sources/KelyphosWidget
+    dependencies:
+      - sdk: WidgetKit.framework
+      - sdk: SwiftUI.framework
+    info:
+      path: Sources/KelyphosWidget/Info.plist
+      properties:
+        CFBundleDisplayName: KelyphosWidget
+        NSExtension:
+          NSExtensionPointIdentifier: com.apple.widgetkit-extension
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.syntropment.kelyphos.demo.widget
+        PRODUCT_NAME: KelyphosWidget
+        GENERATE_INFOPLIST_FILE: false
+        CURRENT_PROJECT_VERSION: 1
+        MARKETING_VERSION: "1.0"
+        LD_RUNPATH_SEARCH_PATHS: "$(inherited) @executable_path/../Frameworks @executable_path/../../../../Frameworks"
+
+schemes:
+  KelyphosDemo:
+    build:
+      targets:
+        KelyphosDemo: all
+        KelyphosWidget: all
+    run:
+      config: Debug
+  KelyphosWidget:
+    build:
+      targets:
+        KelyphosWidget: all
+        KelyphosDemo: all
+    run:
+      config: Debug
+      executable: KelyphosDemo

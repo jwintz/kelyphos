@@ -1,68 +1,122 @@
-// DemoContentView.swift - Central detail view
+// DemoContentView.swift - Router switching on selected showcase item
 
 import SwiftUI
 import KelyphosKit
 
 struct DemoContentView: View {
-    @Environment(\.kelyphosShellState) private var shellState
+    @Environment(\.showcaseState) private var showcaseState
 
     var body: some View {
-        VStack(spacing: 24) {
-            Image(systemName: "cube.transparent")
-                .font(.system(size: 64))
-                .foregroundStyle(.tertiary)
-
-            Text("Kelyphos")
-                .font(.largeTitle)
-                .fontWeight(.light)
-
-            Text("macOS Liquid Glass Shell Framework")
-                .foregroundStyle(.secondary)
-
-            // Panel deactivation toggles (inspector + utility only)
-            GroupBox("Panels") {
-                VStack(alignment: .leading, spacing: 8) {
-                    if let state = shellState {
-                        Toggle("Inspector", isOn: Binding(
-                            get: { state.inspectorEnabled },
-                            set: { state.inspectorEnabled = $0 }
-                        ))
-                        Toggle("Utility Area", isOn: Binding(
-                            get: { state.utilityEnabled },
-                            set: { state.utilityEnabled = $0 }
-                        ))
-                    }
-                }
-                .padding(4)
+        Group {
+            if let item = showcaseState?.selectedItem {
+                pageView(for: item)
+                    .id(item.id)
+            } else {
+                ShowcaseWelcomePage()
             }
-            .frame(width: 300)
-
-            GroupBox("Shortcuts") {
-                VStack(alignment: .leading, spacing: 8) {
-                    shortcutRow("⌘0", "Toggle Navigator")
-                    shortcutRow("⌘1–9", "Select Navigator Tab")
-                    shortcutRow("⌘⌥0", "Toggle Inspector")
-                    shortcutRow("⌘⌥1–9", "Select Inspector Tab")
-                    shortcutRow("⌘⌥⇧0", "Toggle Utility Area")
-                    shortcutRow("⌘⌥⇧1–9", "Select Utility Tab")
-                    shortcutRow("⌘?", "Keyboard Shortcuts")
-                    shortcutRow("⌘,", "Settings")
-                }
-                .font(.system(size: 12))
-                .padding(4)
-            }
-            .frame(width: 300)
         }
-        .padding(.vertical, 40)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 
-    private func shortcutRow(_ shortcut: String, _ label: String) -> some View {
-        HStack {
-            Text(shortcut)
-                .font(.system(size: 11, design: .monospaced))
-                .foregroundStyle(.secondary)
-                .frame(width: 80, alignment: .trailing)
-            Text(label)
+    @ViewBuilder
+    private func pageView(for item: ShowcaseItem) -> some View {
+        switch item.id {
+        // Settings
+        case "kelyphos-settings":
+            KelyphosSettingsPage()
+
+        // Components
+        case "buttons":
+            ButtonsPage()
+        case "context-menus":
+            ContextMenusPage()
+        case "dock-menus":
+            DockMenusPage()
+        case "edit-menus":
+            EditMenusPage()
+        case "menus":
+            MenusPage()
+        case "popup-buttons":
+            PopupButtonsPage()
+        case "pulldown-buttons":
+            PulldownButtonsPage()
+        case "toolbars":
+            ToolbarsPage()
+
+        // Navigation & Search
+        case "path-controls":
+            PathControlsPage()
+        case "search-fields":
+            SearchFieldsPage()
+        case "tab-bars":
+            TabBarsPage()
+        case "token-fields":
+            TokenFieldsPage()
+
+        // Presentation
+        case "action-sheets":
+            ActionSheetsPage()
+        case "alerts":
+            AlertsPage()
+        case "page-controls":
+            PageControlsPage()
+        case "panels":
+            PanelsPage()
+        case "popovers":
+            PopoversPage()
+        case "scroll-views":
+            ScrollViewsPage()
+        case "sheets":
+            SheetsPage()
+
+        // Selection & Input
+        case "font-chooser":
+            FontChooserPage()
+        case "color-wells":
+            ColorWellsPage()
+        case "combo-boxes":
+            ComboBoxesPage()
+        case "digit-entry":
+            DigitEntryPage()
+        case "image-wells":
+            ImageWellsPage()
+        case "pickers":
+            PickersPage()
+        case "segmented-controls":
+            SegmentedControlsPage()
+        case "sliders":
+            SlidersPage()
+        case "steppers":
+            SteppersPage()
+        case "text-fields":
+            TextFieldsPage()
+        case "toggles":
+            TogglesPage()
+        case "virtual-keyboard":
+            VirtualKeyboardPage()
+
+        // Status
+        case "gauges":
+            GaugesPage()
+        case "progress-indicators":
+            ProgressIndicatorsPage()
+        case "rating-indicators":
+            RatingIndicatorsPage()
+
+        // Content
+        case "charts":
+            ChartsPage()
+        case "image-views":
+            ImageViewsPage()
+
+        // System Experience
+        case "notifications":
+            NotificationsPage()
+        case "widgets":
+            WidgetsPage()
+
+        default:
+            DeferredPage(item: item)
         }
     }
 }

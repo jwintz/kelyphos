@@ -43,6 +43,7 @@ private final class LaunchSuppressor: @unchecked Sendable {
 @main
 struct KelyphosDemoApp: App {
     @State private var shellState = KelyphosShellState(persistencePrefix: "kelyphos.demo")
+    @State private var showcaseState = ShowcaseState()
     @AppStorage("kelyphos.demo.showWelcomeOnStartup") private var showWelcomeOnStartup = true
     @Environment(\.openWindow) private var openWindow
 
@@ -80,9 +81,10 @@ struct KelyphosDemoApp: App {
                     detail: { DemoContentView() }
                 )
             )
+            .environment(\.showcaseState, showcaseState)
             .onAppear {
                 shellState.title = "Kelyphos Demo"
-                shellState.subtitle = "Untitled"
+                shellState.subtitle = "HIG Showcase"
 
                 if showWelcomeOnStartup {
                     // Hide the main window immediately - at this point it has empty title
@@ -92,6 +94,9 @@ struct KelyphosDemoApp: App {
                     }
                     openWindow(id: "welcome")
                 }
+            }
+            .onChange(of: showcaseState.selectedItem) { _, newItem in
+                shellState.subtitle = newItem?.title ?? "HIG Showcase"
             }
         }
         .commands {

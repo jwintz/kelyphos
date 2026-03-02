@@ -13,6 +13,7 @@ let package = Package(
     dependencies: [
         .package(url: "https://github.com/CodeEditApp/WelcomeWindow.git", from: "1.1.0"),
         .package(url: "https://github.com/CodeEditApp/AboutWindow.git", from: "1.0.1"),
+        .package(url: "https://github.com/yonaskolb/XcodeGen.git", from: "2.44.1"),
     ],
     targets: [
         .target(

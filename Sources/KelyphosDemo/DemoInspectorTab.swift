@@ -1,4 +1,4 @@
-// DemoInspectorTab.swift - Sample inspector panels
+// DemoInspectorTab.swift - Inspector panels with showcase details
 
 import SwiftUI
 import KelyphosKit
@@ -26,15 +26,7 @@ enum DemoInspectorTab: String, KelyphosPanel, CaseIterable {
     var body: some View {
         switch self {
         case .details:
-            Form {
-                Section("Selection") {
-                    LabeledContent("Name", value: "Example.swift")
-                    LabeledContent("Type", value: "Swift Source")
-                    LabeledContent("Size", value: "2.4 KB")
-                    LabeledContent("Modified", value: "Today")
-                }
-            }
-            .formStyle(.grouped)
+            SelectedItemDetailsView()
         case .properties:
             Form {
                 Section("Display") {

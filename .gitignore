@@ -1,9 +1,12 @@
 .DS_Store
 .build
 .claude
-#/Packages
-#xcuserdata/
-#DerivedData/
-#.swiftpm/xcode/package.xcworkspace/contents.xcworkspacedata
-#.swiftpm/xcode/xcuserdata
 PROMPT.md
+
+# Generated Xcode project (use `make project` to regenerate)
+*.xcodeproj
+*.xcworkspace
+xcuserdata/
+DerivedData/
+.swiftpm/xcode/package.xcworkspace/contents.xcworkspacedata
+.swiftpm/xcode/xcuserdata
