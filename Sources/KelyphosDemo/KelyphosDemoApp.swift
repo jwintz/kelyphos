@@ -104,16 +104,16 @@ struct KelyphosDemoApp: App {
                 shellState.subtitle = newItem?.title ?? "HIG Showcase"
             }
         }
-        #if os(macOS)
         .commands {
             KelyphosCommands(state: shellState)
+            #if os(macOS)
             CommandGroup(replacing: .appInfo) {
                 Button("About Kelyphos") {
                     openWindow(id: "about")
                 }
             }
+            #endif
         }
-        #endif
     }
 
     #if os(macOS)

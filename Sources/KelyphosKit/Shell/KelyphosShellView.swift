@@ -38,6 +38,8 @@ public struct KelyphosShellView<
     @State private var columnVisibility: NavigationSplitViewVisibility = .detailOnly
     @State private var didAppear = false
 
+    @Environment(\.horizontalSizeClass) private var horizontalSizeClass
+
     @State private var navigatorItems: [NavTab] = []
     @State private var navigatorSelection: NavTab?
     @State private var inspectorItems: [InspTab] = []
@@ -66,11 +68,7 @@ public struct KelyphosShellView<
 
     public var body: some View {
         mainContent
-            #if os(macOS)
             .navigationSplitViewStyle(.balanced)
-            #else
-            .navigationSplitViewStyle(.automatic)
-            #endif
             #if os(macOS)
             .navigationTitle(state.title)
             .navigationSubtitle(state.subtitle)
@@ -90,7 +88,8 @@ public struct KelyphosShellView<
                 inspectorItems: $inspectorItems,
                 inspectorSelection: $inspectorSelection,
                 configuration: configuration,
-                appearanceObserver: appearanceObserver
+                appearanceObserver: appearanceObserver,
+                horizontalSizeClass: horizontalSizeClass
             ))
             .overlay { keybindingsOverlay }
             .environment(\.kelyphosShellState, state)
@@ -247,6 +246,7 @@ private struct ShellLifecycleModifier<
     @Binding var inspectorSelection: InspTab?
     let configuration: KelyphosShellConfiguration<NavTab, InspTab, UtilTab, Detail>
     let appearanceObserver: AppearanceObserver
+    var horizontalSizeClass: UserInterfaceSizeClass?
 
     #if os(macOS)
     /// NSEvent monitor for CMD+SHIFT+/ (keybindings overlay).
@@ -265,6 +265,13 @@ private struct ShellLifecycleModifier<
                 state.navigatorTabCount = navigatorItems.count
                 state.inspectorTabCount = inspectorItems.count
                 state.utilityTabCount = configuration.utilityTabs.count
+
+                // On iPad with regular width, default to showing the sidebar
+                #if !os(macOS)
+                if horizontalSizeClass == .regular {
+                    state.navigatorVisible = true
+                }
+                #endif
 
                 var transaction = Transaction()
                 transaction.disablesAnimations = true
