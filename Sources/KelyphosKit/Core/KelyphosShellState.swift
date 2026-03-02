@@ -1,8 +1,12 @@
 // KelyphosShellState.swift - Central observable state for the Kelyphos shell
 // All UI components bind to this single source of truth.
 
-import AppKit
 import SwiftUI
+#if os(macOS)
+import AppKit
+#else
+import UIKit
+#endif
 
 @MainActor
 @Observable
@@ -20,7 +24,11 @@ public final class KelyphosShellState {
 
     // MARK: - Appearance
 
+    #if os(macOS)
     public var backgroundColor: NSColor = .windowBackgroundColor
+    #else
+    public var backgroundColor: UIColor = .systemBackground
+    #endif
     public var backgroundAlpha: CGFloat = 0.5
     public var windowAppearance: String = "auto"
     public var vibrancyMaterial: VibrancyMaterial = .ultraThin

@@ -1,7 +1,11 @@
 // KelyphosColorTheme.swift - Observable color theme with light/dark variants
 
-import AppKit
 import SwiftUI
+#if os(macOS)
+import AppKit
+#else
+import UIKit
+#endif
 
 /// Observable color theme with light and dark variants.
 /// The active variant is selected based on system appearance.
@@ -38,16 +42,24 @@ public final class KelyphosColorTheme {
 
     public var accent: Color { Color(hex: active.accent) ?? .accentColor }
     public var accentSecondary: Color { Color(hex: active.accentSecondary) ?? .secondary }
-    public var background: Color { Color(hex: active.background) ?? Color(nsColor: .windowBackgroundColor) }
-    public var backgroundDim: Color { Color(hex: active.backgroundDim) ?? Color(nsColor: .controlBackgroundColor) }
     public var foreground: Color { Color(hex: active.foreground) ?? .primary }
     public var foregroundDim: Color { Color(hex: active.foregroundDim) ?? .secondary }
     public var error: Color { Color(hex: active.error) ?? .red }
     public var warning: Color { Color(hex: active.warning) ?? .orange }
     public var success: Color { Color(hex: active.success) ?? .green }
     public var link: Color { Color(hex: active.link) ?? .blue }
+
+    #if os(macOS)
+    public var background: Color { Color(hex: active.background) ?? Color(nsColor: .windowBackgroundColor) }
+    public var backgroundDim: Color { Color(hex: active.backgroundDim) ?? Color(nsColor: .controlBackgroundColor) }
     public var border: Color { Color(hex: active.border) ?? Color(nsColor: .separatorColor) }
     public var selection: Color { Color(hex: active.selection) ?? Color(nsColor: .selectedContentBackgroundColor) }
+    #else
+    public var background: Color { Color(hex: active.background) ?? Color(uiColor: .systemBackground) }
+    public var backgroundDim: Color { Color(hex: active.backgroundDim) ?? Color(uiColor: .secondarySystemBackground) }
+    public var border: Color { Color(hex: active.border) ?? Color(uiColor: .separator) }
+    public var selection: Color { Color(hex: active.selection) ?? Color(uiColor: .systemFill) }
+    #endif
 
     // MARK: - Update from Dictionary
 
@@ -76,8 +88,12 @@ public final class KelyphosColorTheme {
     // MARK: - System Detection
 
     private static func systemIsDarkMode() -> Bool {
+        #if os(macOS)
         guard let app = NSApp else { return false }
         let appearance = app.effectiveAppearance
         return appearance.bestMatch(from: [.darkAqua, .aqua]) == .darkAqua
+        #else
+        return UITraitCollection.current.userInterfaceStyle == .dark
+        #endif
     }
 }

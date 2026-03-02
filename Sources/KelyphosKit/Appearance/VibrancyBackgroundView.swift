@@ -1,7 +1,9 @@
-// VibrancyBackgroundView.swift - NSVisualEffectView wrapper for fine-grained blur
+// VibrancyBackgroundView.swift - NSVisualEffectView wrapper (macOS) / Material fallback (iOS)
 
-import AppKit
 import SwiftUI
+
+#if os(macOS)
+import AppKit
 
 /// NSViewRepresentable wrapping NSVisualEffectView for precise vibrancy control.
 public struct VibrancyBackgroundView: NSViewRepresentable {
@@ -35,3 +37,23 @@ public struct VibrancyBackgroundView: NSViewRepresentable {
         nsView.state = isActive ? .active : .inactive
     }
 }
+#else
+/// iOS fallback: uses SwiftUI Material for a blur background.
+public struct VibrancyBackgroundView: View {
+    public var isActive: Bool
+
+    public init(
+        isActive: Bool = true
+    ) {
+        self.isActive = isActive
+    }
+
+    public var body: some View {
+        if isActive {
+            Rectangle().fill(.ultraThinMaterial)
+        } else {
+            Color.clear
+        }
+    }
+}
+#endif

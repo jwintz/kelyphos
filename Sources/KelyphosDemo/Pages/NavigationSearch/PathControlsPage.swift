@@ -1,6 +1,8 @@
-// PathControlsPage.swift - NSPathControl wrapper
+// PathControlsPage.swift - NSPathControl wrapper (macOS only)
 
 import SwiftUI
+
+#if os(macOS)
 import AppKit
 
 struct PathControlsPage: View {
@@ -47,3 +49,14 @@ private struct PathControlRepresentable: NSViewRepresentable {
         nsView.url = url
     }
 }
+#else
+struct PathControlsPage: View {
+    var body: some View {
+        ContentUnavailableView(
+            "macOS Only",
+            systemImage: "macbook",
+            description: Text("Path Controls are only available on macOS.")
+        )
+    }
+}
+#endif

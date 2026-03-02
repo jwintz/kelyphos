@@ -1,8 +1,10 @@
 // KelyphosShellView.swift - NavigationSplitView layout
 // Main entry point for the Kelyphos shell chrome.
 
-import AppKit
 import SwiftUI
+#if os(macOS)
+import AppKit
+#endif
 
 // MARK: - Preference Keys
 
@@ -64,12 +66,18 @@ public struct KelyphosShellView<
 
     public var body: some View {
         mainContent
+            #if os(macOS)
             .navigationSplitViewStyle(.balanced)
+            #else
+            .navigationSplitViewStyle(.automatic)
+            #endif
+            #if os(macOS)
             .navigationTitle(state.title)
             .navigationSubtitle(state.subtitle)
             .toolbarBackgroundVisibility(.hidden, for: .windowToolbar)
             .toolbarTitleDisplayMode(.inline)
             .toolbar { trailingToolbar }
+            #endif
             .background { vibrancyBackground }
             .onPreferenceChange(NavigatorWidthKey.self) { state.navigatorWidth = $0 }
             .onPreferenceChange(InspectorWidthKey.self) { state.inspectorWidth = $0 }
@@ -123,6 +131,11 @@ public struct KelyphosShellView<
             detail: configuration.detail
         )
         .frame(maxWidth: .infinity, maxHeight: .infinity)
+        #if !os(macOS)
+        .navigationTitle(state.title)
+        .toolbarTitleDisplayMode(.inline)
+        .toolbar { trailingToolbar }
+        #endif
         .inspector(isPresented: inspectorVisibleBinding) {
             inspectorContent
         }
@@ -188,6 +201,7 @@ public struct KelyphosShellView<
 
     private var vibrancyBackground: some View {
         ZStack {
+            #if os(macOS)
             VibrancyBackgroundView(
                 material: state.vibrancyMaterial.nsMaterial,
                 blendingMode: .behindWindow,
@@ -195,6 +209,13 @@ public struct KelyphosShellView<
             )
             Color(nsColor: state.backgroundColor)
                 .opacity(Double(state.backgroundAlpha))
+            #else
+            VibrancyBackgroundView(
+                isActive: state.vibrancyMaterial != .none
+            )
+            Color(uiColor: state.backgroundColor)
+                .opacity(Double(state.backgroundAlpha))
+            #endif
         }
         .ignoresSafeArea()
     }
@@ -227,9 +248,11 @@ private struct ShellLifecycleModifier<
     let configuration: KelyphosShellConfiguration<NavTab, InspTab, UtilTab, Detail>
     let appearanceObserver: AppearanceObserver
 
+    #if os(macOS)
     /// NSEvent monitor for CMD+SHIFT+/ (keybindings overlay).
     /// macOS reserves this for the Help menu — we intercept it before the system.
     @State private var keyMonitor: Any?
+    #endif
 
     func body(content: Content) -> some View {
         content
@@ -250,12 +273,16 @@ private struct ShellLifecycleModifier<
                 }
                 DispatchQueue.main.async { didAppear = true }
                 appearanceObserver.start(updating: state.colorTheme)
+                #if os(macOS)
                 installKeyMonitor()
+                #endif
             }
             .onDisappear {
+                #if os(macOS)
                 if let monitor = keyMonitor {
                     NSEvent.removeMonitor(monitor)
                 }
+                #endif
             }
             // Sync index-based tab selection from keyboard shortcuts
             .onChange(of: state.selectedNavigatorIndex) { _, newIndex in
@@ -320,6 +347,7 @@ private struct ShellLifecycleModifier<
             }
     }
 
+    #if os(macOS)
     /// Install NSEvent local monitor to intercept CMD+SHIFT+/ before macOS Help menu.
     private func installKeyMonitor() {
         print("[Kelyphos] Installing key monitor for CMD+SHIFT+/")
@@ -349,8 +377,10 @@ private struct ShellLifecycleModifier<
         }
         print("[Kelyphos] Key monitor installed: \(keyMonitor != nil)")
     }
+    #endif
 
     private func applyAppearance(_ mode: String) {
+        #if os(macOS)
         let nsAppearance: NSAppearance?
         switch mode {
         case "light": nsAppearance = NSAppearance(named: .aqua)
@@ -358,6 +388,7 @@ private struct ShellLifecycleModifier<
         default: nsAppearance = nil
         }
         NSApp.appearance = nsAppearance
+        #endif
         state.colorTheme.refreshAppearance()
         state.saveAppearance()
     }

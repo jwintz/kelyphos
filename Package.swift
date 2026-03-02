@@ -5,7 +5,8 @@ import PackageDescription
 let package = Package(
     name: "Kelyphos",
     platforms: [
-        .macOS(.v26)
+        .macOS(.v26),
+        .iOS(.v26)
     ],
     products: [
         .library(name: "KelyphosKit", targets: ["KelyphosKit"])

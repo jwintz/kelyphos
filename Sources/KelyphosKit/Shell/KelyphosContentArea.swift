@@ -1,7 +1,11 @@
 // KelyphosContentArea.swift - Center detail area with optional utility panel
 
-import AppKit
 import SwiftUI
+#if os(macOS)
+import AppKit
+#else
+import UIKit
+#endif
 
 /// The detail content area: scrollable main view + optional utility panel at the bottom.
 /// Lives inside the NavigationSplitView detail column.
@@ -51,7 +55,7 @@ public struct KelyphosContentArea<
                 // Transparent — inherits global behindWindow vibrancy from KelyphosShellView.
                 // Thin tint boost for differentiation (Hyalo pattern: base + 0.5).
                 .background {
-                    Color(nsColor: state.backgroundColor)
+                    backgroundTint
                         .opacity(min(1.0, Double(state.backgroundAlpha) + 0.5))
                         .clipShape(.rect(
                             topLeadingRadius: KelyphosDesign.CornerRadius.content,
@@ -71,5 +75,13 @@ public struct KelyphosContentArea<
             guard let idx = newIndex, idx >= 0, idx < utilityItems.count else { return }
             utilitySelection = utilityItems[idx]
         }
+    }
+
+    private var backgroundTint: Color {
+        #if os(macOS)
+        Color(nsColor: state.backgroundColor)
+        #else
+        Color(uiColor: state.backgroundColor)
+        #endif
     }
 }

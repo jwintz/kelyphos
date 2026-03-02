@@ -20,7 +20,7 @@ enum ShowcaseCatalog {
         (.navigationSearch, [
             ShowcaseItem(id: "path-controls", title: "Path Controls", systemImage: "chevron.compact.right", section: .navigationSearch, platforms: [.macOS], priority: .top),
             ShowcaseItem(id: "search-fields", title: "Search Fields", systemImage: "magnifyingglass", section: .navigationSearch, platforms: [.iOS, .iPadOS, .macOS], priority: .top),
-            ShowcaseItem(id: "tab-bars", title: "Tab Bars", systemImage: "tab.fill", section: .navigationSearch, platforms: [.iOS, .iPadOS, .macOS, .tvOS], priority: .top),
+            ShowcaseItem(id: "tab-bars", title: "Tab Bars", systemImage: "macwindow", section: .navigationSearch, platforms: [.iOS, .iPadOS, .macOS, .tvOS], priority: .top),
             ShowcaseItem(id: "token-fields", title: "Token Fields", systemImage: "textformat.abc", section: .navigationSearch, platforms: [.macOS], priority: .top),
         ]),
         (.presentation, [
@@ -62,6 +62,21 @@ enum ShowcaseCatalog {
     ]
 
     static let allItems: [ShowcaseItem] = sections.flatMap(\.1)
+
+    /// Sections filtered for the current platform, removing empty sections.
+    static var currentPlatformSections: [(ShowcaseSection, [ShowcaseItem])] {
+        #if os(macOS)
+        let current: Set<ShowcasePlatform> = [.macOS]
+        #else
+        // On iOS, show both iOS and iPadOS items (iPadOS is a superset)
+        let current: Set<ShowcasePlatform> = [.iOS, .iPadOS]
+        #endif
+
+        return sections.compactMap { section, items in
+            let filtered = items.filter { !$0.platforms.isEmpty && !current.isDisjoint(with: $0.platforms) }
+            return filtered.isEmpty ? nil : (section, filtered)
+        }
+    }
 
     static func item(_ id: String) -> ShowcaseItem? {
         allItems.first { $0.id == id }

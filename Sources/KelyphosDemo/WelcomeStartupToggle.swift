@@ -10,7 +10,9 @@ struct WelcomeStartupToggle: View {
     var body: some View {
         VStack(spacing: 6) {
             Toggle("Show this window on startup", isOn: $showOnStartup)
+                #if os(macOS)
                 .toggleStyle(.checkbox)
+                #endif
                 .font(.system(size: 12))
         }
     }

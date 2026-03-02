@@ -8,7 +8,7 @@ struct ExploreNavigatorView: View {
 
     var body: some View {
         List(selection: $localSelection) {
-            ForEach(ShowcaseCatalog.sections, id: \.0) { section, items in
+            ForEach(ShowcaseCatalog.currentPlatformSections, id: \.0) { section, items in
                 Section(section.title) {
                     ForEach(items) { item in
                         NavigatorItemRow(item: item)

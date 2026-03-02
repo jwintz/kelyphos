@@ -1,6 +1,5 @@
 // DemoUtilityTab.swift - Sample utility panels
 
-import AppKit
 import SwiftUI
 import KelyphosKit
 

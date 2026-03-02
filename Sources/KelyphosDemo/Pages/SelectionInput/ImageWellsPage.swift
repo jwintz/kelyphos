@@ -1,6 +1,9 @@
-// ImageWellsPage.swift - Image drop target
+// ImageWellsPage.swift - Image drop target (macOS only)
 
 import SwiftUI
+
+#if os(macOS)
+import AppKit
 
 struct ImageWellsPage: View {
     @State private var droppedImage: NSImage?
@@ -49,3 +52,14 @@ struct ImageWellsPage: View {
         }
     }
 }
+#else
+struct ImageWellsPage: View {
+    var body: some View {
+        ContentUnavailableView(
+            "macOS Only",
+            systemImage: "macbook",
+            description: Text("Image Wells are only available on macOS.")
+        )
+    }
+}
+#endif

@@ -1,6 +1,8 @@
-// TokenFieldsPage.swift - NSTokenField wrapper
+// TokenFieldsPage.swift - NSTokenField wrapper (macOS only)
 
 import SwiftUI
+
+#if os(macOS)
 import AppKit
 
 struct TokenFieldsPage: View {
@@ -72,3 +74,14 @@ private struct TokenFieldRepresentable: NSViewRepresentable {
         }
     }
 }
+#else
+struct TokenFieldsPage: View {
+    var body: some View {
+        ContentUnavailableView(
+            "macOS Only",
+            systemImage: "macbook",
+            description: Text("Token Fields are only available on macOS.")
+        )
+    }
+}
+#endif

@@ -1,6 +1,8 @@
-// ComboBoxesPage.swift - NSComboBox wrapper
+// ComboBoxesPage.swift - NSComboBox wrapper (macOS only)
 
 import SwiftUI
+
+#if os(macOS)
 import AppKit
 
 struct ComboBoxesPage: View {
@@ -69,3 +71,14 @@ private struct ComboBoxRepresentable: NSViewRepresentable {
         }
     }
 }
+#else
+struct ComboBoxesPage: View {
+    var body: some View {
+        ContentUnavailableView(
+            "macOS Only",
+            systemImage: "macbook",
+            description: Text("Combo Boxes are only available on macOS.")
+        )
+    }
+}
+#endif

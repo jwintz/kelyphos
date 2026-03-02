@@ -18,6 +18,7 @@ struct TogglesPage: View {
                     }
                 }
 
+                #if os(macOS)
                 GlassSection(title: "Checkbox Style") {
                     VStack(alignment: .leading, spacing: 8) {
                         Toggle("Show hidden files", isOn: $isOn1)
@@ -28,6 +29,7 @@ struct TogglesPage: View {
                             .toggleStyle(.checkbox)
                     }
                 }
+                #endif
 
                 GlassSection(title: "Button Style") {
                     HStack(spacing: 12) {

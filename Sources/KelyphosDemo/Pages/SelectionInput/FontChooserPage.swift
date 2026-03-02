@@ -1,6 +1,8 @@
-// FontChooserPage.swift - Rich font chooser with in-picker preview
+// FontChooserPage.swift - Rich font chooser with in-picker preview (macOS only)
 
 import SwiftUI
+
+#if os(macOS)
 import AppKit
 import KelyphosKit
 
@@ -134,3 +136,16 @@ private struct SystemFontPicker: NSViewRepresentable {
         }
     }
 }
+#else
+import KelyphosKit
+
+struct FontChooserPage: View {
+    var body: some View {
+        ContentUnavailableView(
+            "macOS Only",
+            systemImage: "macbook",
+            description: Text("The Font Chooser page requires macOS-specific font APIs.")
+        )
+    }
+}
+#endif

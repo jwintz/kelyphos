@@ -1,6 +1,5 @@
 // AppearanceSettingsSection.swift - Appearance/opacity/vibrancy/presets controls
 
-import AppKit
 import SwiftUI
 
 /// A Form section for controlling window appearance, opacity, vibrancy, and presets.

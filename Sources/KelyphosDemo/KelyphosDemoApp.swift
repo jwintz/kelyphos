@@ -1,12 +1,12 @@
 // KelyphosDemoApp.swift - @main with WindowGroup + Settings + Welcome + About
 
-import AppKit
 import SwiftUI
 import KelyphosKit
+
+#if os(macOS)
+import AppKit
 import WelcomeWindow
 import AboutWindow
-
-
 
 /// Helper class that holds an observer token and can invalidate itself.
 /// Used to intercept the main window during launch and auto-remove after first fire.
@@ -15,8 +15,6 @@ private final class LaunchSuppressor: @unchecked Sendable {
     private var observer: NSObjectProtocol?
 
     init() {
-        // Observe willBecomeKey to hide the main window if it becomes key
-        // (backup in case onAppear hide misses it)
         observer = NotificationCenter.default.addObserver(
             forName: NSNotification.Name("NSWindowWillBecomeKeyNotification"),
             object: nil,
@@ -39,29 +37,25 @@ private final class LaunchSuppressor: @unchecked Sendable {
         }
     }
 }
+#endif
 
 @main
 struct KelyphosDemoApp: App {
     @State private var shellState = KelyphosShellState(persistencePrefix: "kelyphos.demo")
     @State private var showcaseState = ShowcaseState()
-    @AppStorage("kelyphos.demo.showWelcomeOnStartup") private var showWelcomeOnStartup = true
     @Environment(\.openWindow) private var openWindow
 
-    /// Helper that intercepts the main window appearance during launch
+    #if os(macOS)
+    @AppStorage("kelyphos.demo.showWelcomeOnStartup") private var showWelcomeOnStartup = true
     private let launchSuppressor: LaunchSuppressor?
 
     init() {
         NSApplication.shared.setActivationPolicy(.regular)
         NSApplication.shared.activate(ignoringOtherApps: true)
-
-        // Read directly from UserDefaults since @AppStorage isn't available in init
         let shouldShowWelcome = UserDefaults.standard.bool(forKey: "kelyphos.demo.showWelcomeOnStartup")
-
-        // Intercept the main window if it becomes key (backup mechanism)
         launchSuppressor = shouldShowWelcome ? LaunchSuppressor() : nil
     }
 
-    /// Bring the main "Kelyphos Demo" window back after the welcome window is dismissed.
     @MainActor
     private static func showMainWindow() {
         for window in NSApp.windows where window.title == "Kelyphos Demo" {
@@ -69,8 +63,19 @@ struct KelyphosDemoApp: App {
             return
         }
     }
+    #endif
 
     var body: some Scene {
+        mainWindowGroup
+
+        #if os(macOS)
+        settingsScene
+        welcomeScene
+        aboutScene
+        #endif
+    }
+
+    private var mainWindowGroup: some Scene {
         WindowGroup("Kelyphos Demo") {
             KelyphosShellView(
                 state: shellState,
@@ -86,31 +91,33 @@ struct KelyphosDemoApp: App {
                 shellState.title = "Kelyphos Demo"
                 shellState.subtitle = "HIG Showcase"
 
+                #if os(macOS)
                 if showWelcomeOnStartup {
-                    // Hide the main window immediately - at this point it has empty title
-                    // but is already visible, so we detect it by visibility + empty title
                     for window in NSApp.windows where window.isVisible && window.title.isEmpty {
                         window.orderOut(nil)
                     }
                     openWindow(id: "welcome")
                 }
+                #endif
             }
             .onChange(of: showcaseState.selectedItem) { _, newItem in
                 shellState.subtitle = newItem?.title ?? "HIG Showcase"
             }
         }
+        #if os(macOS)
         .commands {
             KelyphosCommands(state: shellState)
-
-            // P24: Override default About menu to open our AboutWindow
             CommandGroup(replacing: .appInfo) {
                 Button("About Kelyphos") {
                     openWindow(id: "about")
                 }
             }
         }
+        #endif
+    }
 
-        // P22: Tabbed settings with General + Appearance panes
+    #if os(macOS)
+    private var settingsScene: some Scene {
         SwiftUI.Settings {
             TabView {
                 GeneralSettingsTab()
@@ -119,8 +126,9 @@ struct KelyphosDemoApp: App {
                     .tabItem { Label("Appearance", systemImage: "paintbrush") }
             }
         }
+    }
 
-        // P23b: "Show on startup" checkbox via subtitleView
+    private var welcomeScene: some Scene {
         WelcomeWindow(
             title: "Kelyphos",
             subtitleView: { WelcomeStartupToggle() }
@@ -150,8 +158,9 @@ struct KelyphosDemoApp: App {
                 }
             )
         }
+    }
 
-        // About window
+    private var aboutScene: some Scene {
         AboutWindow(title: "Kelyphos") {
             AboutButton(title: "Acknowledgements") {
                 VStack(alignment: .leading, spacing: 12) {
@@ -162,4 +171,5 @@ struct KelyphosDemoApp: App {
             }
         }
     }
+    #endif
 }

@@ -8,6 +8,10 @@ public struct PanelDivider: View {
 
     public var body: some View {
         Divider()
+            #if os(macOS)
             .overlay(Color(nsColor: .separatorColor))
+            #else
+            .overlay(Color(uiColor: .separator))
+            #endif
     }
 }

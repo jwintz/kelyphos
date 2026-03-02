@@ -1,7 +1,9 @@
-// EffectView.swift - Simple NSVisualEffectView wrapper
+// EffectView.swift - Simple NSVisualEffectView wrapper (macOS) / Material fallback (iOS)
 
-import AppKit
 import SwiftUI
+
+#if os(macOS)
+import AppKit
 
 /// Lightweight NSVisualEffectView wrapper for quick vibrancy backgrounds.
 public struct EffectView: NSViewRepresentable {
@@ -29,3 +31,19 @@ public struct EffectView: NSViewRepresentable {
         nsView.blendingMode = blendingMode
     }
 }
+#else
+/// iOS fallback: a simple SwiftUI Material rectangle.
+public struct EffectView: View {
+    public init(
+        _ material: Material = .ultraThinMaterial
+    ) {
+        self.material = material
+    }
+
+    private let material: Material
+
+    public var body: some View {
+        Rectangle().fill(material)
+    }
+}
+#endif

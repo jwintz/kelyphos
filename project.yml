@@ -3,6 +3,7 @@ options:
   bundleIdPrefix: com.syntropment.kelyphos
   deploymentTarget:
     macOS: "26.0"
+    iOS: "26.0"
   xcodeVersion: "26.0"
   generateEmptyDirectories: false
   createIntermediateGroups: true
@@ -12,6 +13,7 @@ settings:
   base:
     SWIFT_VERSION: "6.0"
     MACOSX_DEPLOYMENT_TARGET: "26.0"
+    IPHONEOS_DEPLOYMENT_TARGET: "26.0"
     DEVELOPMENT_TEAM: H4T77W7K9A
     CODE_SIGN_STYLE: Automatic
 
@@ -26,18 +28,19 @@ packages:
 targets:
   KelyphosDemo:
     type: application
-    platform: macOS
+    supportedDestinations: [macOS, iOS]
     sources:
       - Sources/KelyphosDemo
       - path: Kelyphos.icns
         buildPhase: resources
     dependencies:
       - target: KelyphosKit
-        embed: false
       - target: KelyphosWidget
         embed: true
       - package: WelcomeWindow
+        destinationFilters: [macOS]
       - package: AboutWindow
+        destinationFilters: [macOS]
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.syntropment.kelyphos.demo
@@ -50,7 +53,7 @@ targets:
 
   KelyphosKit:
     type: framework
-    platform: macOS
+    supportedDestinations: [macOS, iOS]
     sources:
       - Sources/KelyphosKit
     settings:
@@ -61,7 +64,7 @@ targets:
 
   KelyphosWidget:
     type: app-extension
-    platform: macOS
+    supportedDestinations: [macOS, iOS]
     sources:
       - Sources/KelyphosWidget
     dependencies:
@@ -80,6 +83,8 @@ targets:
         GENERATE_INFOPLIST_FILE: false
         CURRENT_PROJECT_VERSION: 1
         MARKETING_VERSION: "1.0"
+        SKIP_INSTALL: YES
+        APPLICATION_EXTENSION_API_ONLY: YES
         LD_RUNPATH_SEARCH_PATHS: "$(inherited) @executable_path/../Frameworks @executable_path/../../../../Frameworks"
 
 schemes:

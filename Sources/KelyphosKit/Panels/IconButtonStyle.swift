@@ -7,7 +7,9 @@ public struct IconButtonStyle: ButtonStyle {
     public var isActive: Bool
     public var size: CGSize?
 
+    #if os(macOS)
     @Environment(\.controlActiveState) private var controlActiveState
+    #endif
     @Environment(\.colorScheme) private var colorScheme
 
     public init(isActive: Bool, size: CGSize? = nil) {
@@ -15,13 +17,17 @@ public struct IconButtonStyle: ButtonStyle {
         self.size = size
     }
 
+    private var inactiveColor: Color {
+        #if os(macOS)
+        Color(nsColor: .secondaryLabelColor)
+        #else
+        Color(uiColor: .secondaryLabel)
+        #endif
+    }
+
     public func makeBody(configuration: Configuration) -> some View {
         configuration.label
-            .foregroundColor(
-                isActive
-                    ? Color.accentColor
-                    : Color(nsColor: .secondaryLabelColor)
-            )
+            .foregroundColor(isActive ? Color.accentColor : inactiveColor)
             .frame(width: size?.width, height: size?.height, alignment: .center)
             .contentShape(Rectangle())
             .brightness(
@@ -31,6 +37,8 @@ public struct IconButtonStyle: ButtonStyle {
                         : isActive ? -0.25 : -0.75
                     : 0
             )
+            #if os(macOS)
             .opacity(controlActiveState == .inactive ? 0.5 : 1)
+            #endif
     }
 }

@@ -18,12 +18,14 @@ struct PickersPage: View {
                     .pickerStyle(.menu)
                 }
 
+                #if os(macOS)
                 GlassSection(title: "Radio Group Style") {
                     Picker("Fruit", selection: $selection2) {
                         ForEach(fruits, id: \.self) { Text($0) }
                     }
                     .pickerStyle(.radioGroup)
                 }
+                #endif
 
                 GlassSection(title: "Inline Style") {
                     Picker("Fruit", selection: $selection3) {

@@ -1,6 +1,5 @@
 // AppearanceObserver.swift - System appearance change listener
 
-import AppKit
 import SwiftUI
 
 /// Listens for system appearance changes and updates KelyphosColorTheme.
@@ -8,12 +7,15 @@ import SwiftUI
 @MainActor
 @Observable
 public final class AppearanceObserver {
+    #if os(macOS)
     private var observation: NSObjectProtocol?
+    #endif
 
     public init() {}
 
     /// Start listening for system appearance changes.
     public func start(updating theme: KelyphosColorTheme) {
+        #if os(macOS)
         observation = DistributedNotificationCenter.default().addObserver(
             forName: Notification.Name("AppleInterfaceThemeChangedNotification"),
             object: nil,
@@ -23,14 +25,18 @@ public final class AppearanceObserver {
                 theme?.refreshAppearance()
             }
         }
+        #endif
+        // On iOS, SwiftUI handles appearance changes automatically via @Environment(\.colorScheme).
     }
 
     /// Stop listening.
     public func stop() {
+        #if os(macOS)
         if let obs = observation {
             DistributedNotificationCenter.default().removeObserver(obs)
             observation = nil
         }
+        #endif
     }
 
     deinit {
