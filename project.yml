@@ -37,6 +37,7 @@ targets:
       - target: KelyphosKit
       - target: KelyphosWidget
         embed: true
+        codeSign: true
       - package: WelcomeWindow
         destinationFilters: [macOS]
       - package: AboutWindow
@@ -46,12 +47,15 @@ targets:
         PRODUCT_BUNDLE_IDENTIFIER: com.syntropment.kelyphos.demo
         PRODUCT_NAME: KelyphosDemo
         GENERATE_INFOPLIST_FILE: true
+        CODE_SIGN_ENTITLEMENTS: Sources/KelyphosDemo/KelyphosDemo.entitlements
         CURRENT_PROJECT_VERSION: 1
         MARKETING_VERSION: "1.0"
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
         INFOPLIST_KEY_CFBundleIconFile: Kelyphos
-        INFOPLIST_KEY_UILaunchScreen_Generation: true
-        INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad: "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight"
+        "INFOPLIST_KEY_UILaunchScreen_Generation[sdk=iphoneos*]": true
+        "INFOPLIST_KEY_UILaunchScreen_Generation[sdk=iphonesimulator*]": true
+        "INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad[sdk=iphoneos*]": "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight"
+        "INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad[sdk=iphonesimulator*]": "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight"
 
   KelyphosKit:
     type: framework
@@ -83,6 +87,7 @@ targets:
         PRODUCT_BUNDLE_IDENTIFIER: com.syntropment.kelyphos.demo.widget
         PRODUCT_NAME: KelyphosWidget
         GENERATE_INFOPLIST_FILE: false
+        CODE_SIGN_ENTITLEMENTS: Sources/KelyphosWidget/KelyphosWidget.entitlements
         CURRENT_PROJECT_VERSION: 1
         MARKETING_VERSION: "1.0"
         SKIP_INSTALL: YES

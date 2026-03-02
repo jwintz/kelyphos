@@ -113,6 +113,9 @@ public struct KelyphosShellView<
             position: .top
         )
         .frame(maxWidth: .infinity, maxHeight: .infinity)
+        #if !os(macOS)
+        .dynamicTypeSize(.xSmall ... .medium)
+        #endif
         .navigationSplitViewColumnWidth(ideal: KelyphosDesign.Width.sidebarIdeal)
         .background {
             GeometryReader { geo in
@@ -133,7 +136,20 @@ public struct KelyphosShellView<
         #if !os(macOS)
         .navigationTitle(state.title)
         .toolbarTitleDisplayMode(.inline)
-        .toolbar { trailingToolbar }
+        .toolbar {
+            ToolbarItem(placement: .principal) {
+                VStack(spacing: 0) {
+                    Text(state.title)
+                        .font(.system(size: KelyphosDesign.FontSize.emphasized, weight: .semibold))
+                    if !state.subtitle.isEmpty {
+                        Text(state.subtitle)
+                            .font(.system(size: KelyphosDesign.FontSize.caption))
+                            .foregroundStyle(.secondary)
+                    }
+                }
+            }
+            trailingToolbar
+        }
         #endif
         .inspector(isPresented: inspectorVisibleBinding) {
             inspectorContent
@@ -148,6 +164,9 @@ public struct KelyphosShellView<
             selectionStyle: .opaque
         )
         .frame(maxWidth: .infinity, maxHeight: .infinity)
+        #if !os(macOS)
+        .dynamicTypeSize(.xSmall ... .medium)
+        #endif
         .inspectorColumnWidth(ideal: KelyphosDesign.Width.inspectorIdeal)
         .background {
             GeometryReader { geo in

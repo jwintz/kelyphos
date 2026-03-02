@@ -41,7 +41,13 @@ struct KelyphosWidget: Widget {
         }
         .configurationDisplayName("Kelyphos")
         .description("HIG Component Showcase at a glance.")
-        .supportedFamilies([.systemSmall, .systemMedium, .systemLarge, .systemExtraLarge])
+        .supportedFamilies({
+            var families: [WidgetFamily] = [.systemSmall, .systemMedium, .systemLarge]
+            #if os(iOS)
+            families.append(.systemExtraLarge)
+            #endif
+            return families
+        }())
     }
 }
 

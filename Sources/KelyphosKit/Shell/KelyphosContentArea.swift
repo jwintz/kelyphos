@@ -48,6 +48,9 @@ public struct KelyphosContentArea<
                     position: .top
                 )
                 .frame(height: state.utilityAreaHeight)
+                #if !os(macOS)
+                .dynamicTypeSize(.xSmall ... .medium)
+                #endif
                 .clipShape(.rect(
                     topLeadingRadius: KelyphosDesign.CornerRadius.content,
                     topTrailingRadius: KelyphosDesign.CornerRadius.content
