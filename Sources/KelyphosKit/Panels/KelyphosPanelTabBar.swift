@@ -70,7 +70,7 @@ public struct KelyphosPanelTabBar<Tab: KelyphosPanel>: View {
                             if tab == effective {
                                 switch selectionStyle {
                                 case .material:
-                                    Capsule().fill(.thinMaterial)
+                                    Capsule().fill(.regularMaterial)
                                 case .opaque:
                                     Capsule().fill(.background)
                                         .shadow(color: .primary.opacity(0.15), radius: 1, y: 0.5)

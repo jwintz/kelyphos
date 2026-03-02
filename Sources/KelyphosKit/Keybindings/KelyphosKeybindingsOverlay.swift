@@ -67,6 +67,9 @@ public struct KelyphosKeybindingsOverlay: View {
             TextField("Search shortcuts…", text: $searchText)
                 .textFieldStyle(.plain)
         }
+        .padding(.horizontal, 10)
+        .padding(.vertical, 6)
+        .glassEffect(in: .capsule)
         .padding(.horizontal)
         .padding(.bottom, 8)
     }

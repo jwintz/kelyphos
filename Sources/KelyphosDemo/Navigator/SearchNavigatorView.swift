@@ -17,9 +17,16 @@ struct SearchNavigatorView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            TextField("Search components…", text: $searchText)
-                .textFieldStyle(.roundedBorder)
-                .padding(8)
+            HStack(spacing: 6) {
+                Image(systemName: "magnifyingglass")
+                    .foregroundStyle(.tertiary)
+                TextField("Search components…", text: $searchText)
+                    .textFieldStyle(.plain)
+            }
+            .padding(.horizontal, 10)
+            .padding(.vertical, 6)
+            .glassEffect(in: .capsule)
+            .padding(8)
 
             if searchText.isEmpty {
                 Spacer()
