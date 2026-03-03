@@ -55,15 +55,17 @@ public struct KelyphosContentArea<
                     topLeadingRadius: KelyphosDesign.CornerRadius.content,
                     topTrailingRadius: KelyphosDesign.CornerRadius.content
                 ))
-                // Transparent — inherits global behindWindow vibrancy from KelyphosShellView.
-                // Thin tint boost for differentiation (Hyalo pattern: base + 0.5).
+                .scrollContentBackground(.hidden)
                 .background {
-                    backgroundTint
-                        .opacity(min(1.0, Double(state.backgroundAlpha) + 0.5))
-                        .clipShape(.rect(
-                            topLeadingRadius: KelyphosDesign.CornerRadius.content,
-                            topTrailingRadius: KelyphosDesign.CornerRadius.content
-                        ))
+                    ZStack {
+                        Rectangle().fill(.ultraThinMaterial)
+                        backgroundTint
+                            .opacity(Double(state.backgroundAlpha))
+                    }
+                    .clipShape(.rect(
+                        topLeadingRadius: KelyphosDesign.CornerRadius.content,
+                        topTrailingRadius: KelyphosDesign.CornerRadius.content
+                    ))
                 }
                 .padding(.horizontal, KelyphosDesign.Padding.compact)
             }
