@@ -45,16 +45,13 @@ public struct KelyphosContentArea<
                 KelyphosPanelContainer(
                     items: $utilityItems,
                     selection: $utilitySelection,
-                    position: .top
+                    position: .top,
+                    selectionStyle: .material
                 )
                 .frame(height: state.utilityAreaHeight)
                 #if !os(macOS)
                 .dynamicTypeSize(.xSmall ... .medium)
                 #endif
-                .clipShape(.rect(
-                    topLeadingRadius: KelyphosDesign.CornerRadius.content,
-                    topTrailingRadius: KelyphosDesign.CornerRadius.content
-                ))
                 .scrollContentBackground(.hidden)
                 .background {
                     ZStack {
@@ -80,6 +77,27 @@ public struct KelyphosContentArea<
             guard let idx = newIndex, idx >= 0, idx < utilityItems.count else { return }
             utilitySelection = utilityItems[idx]
         }
+    }
+
+    @ViewBuilder
+    private var backgroundView: some View {
+        #if os(macOS)
+        ZStack {
+            VibrancyBackgroundView(
+                material: .menu,
+                blendingMode: .behindWindow,
+                isActive: true
+            )
+            backgroundTint
+                .opacity(Double(state.backgroundAlpha))
+        }
+        #else
+        ZStack {
+            Rectangle().fill(.ultraThinMaterial)
+            backgroundTint
+                .opacity(Double(state.backgroundAlpha))
+        }
+        #endif
     }
 
     private var backgroundTint: Color {

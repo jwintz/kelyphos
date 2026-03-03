@@ -25,7 +25,7 @@ public struct VibrancyBackgroundView: NSViewRepresentable {
         let view = NSVisualEffectView()
         view.material = material
         view.blendingMode = blendingMode
-        view.state = isActive ? .active : .inactive
+        view.state = isActive ? .followsWindowActiveState : .inactive
         view.isEmphasized = true
         view.wantsLayer = true
         return view
@@ -34,7 +34,7 @@ public struct VibrancyBackgroundView: NSViewRepresentable {
     public func updateNSView(_ nsView: NSVisualEffectView, context: Context) {
         nsView.material = material
         nsView.blendingMode = blendingMode
-        nsView.state = isActive ? .active : .inactive
+        nsView.state = isActive ? .followsWindowActiveState : .inactive
     }
 }
 #else

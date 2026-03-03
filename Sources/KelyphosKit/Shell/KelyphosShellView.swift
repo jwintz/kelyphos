@@ -172,7 +172,7 @@ public struct KelyphosShellView<
             items: $inspectorItems,
             selection: $inspectorSelection,
             position: .top,
-            selectionStyle: .opaque
+            selectionStyle: .material
         )
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         #if !os(macOS)
