@@ -73,7 +73,6 @@ public struct KelyphosShellView<
             .navigationTitle(state.title)
             .navigationSubtitle(state.subtitle)
             .toolbarTitleDisplayMode(.inline)
-            .toolbar { trailingToolbar }
             #endif
             .background { vibrancyBackground }
             .onPreferenceChange(NavigatorWidthKey.self) { state.navigatorWidth = $0 }
@@ -125,34 +124,40 @@ public struct KelyphosShellView<
     }
 
     // Detail content: scrollable main view + utility panel, wrapped with inspector
+    @ViewBuilder
     private var detailContent: some View {
+        detailContentBase
+            #if os(macOS)
+            .toolbar { trailingToolbar }
+            .inspector(isPresented: inspectorVisibleBinding) {
+                inspectorContent
+            }
+            #else
+            .navigationTitle(state.title)
+            .toolbarTitleDisplayMode(.inline)
+            .toolbar { iOSTrailingToolbar }
+            .overlay(alignment: .trailing) {
+                if inspectorVisibleBinding.wrappedValue {
+                    inspectorContent
+                        .scrollContentBackground(.hidden)
+                        .frame(width: 320)
+                        .frame(maxHeight: .infinity)
+                        .clipped()
+                        .background(.ultraThinMaterial, in: UnevenRoundedRectangle(topLeadingRadius: 12, bottomLeadingRadius: 12))
+                        .shadow(color: .black.opacity(0.15), radius: 8, x: -2)
+                        .transition(.move(edge: .trailing))
+                }
+            }
+            #endif
+    }
+
+    private var detailContentBase: some View {
         KelyphosContentArea(
             state: state,
             utilityTabs: configuration.utilityTabs,
             detail: configuration.detail
         )
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        #if !os(macOS)
-        .navigationTitle(state.title)
-        .toolbarTitleDisplayMode(.inline)
-        .toolbar {
-            ToolbarItem(placement: .principal) {
-                VStack(spacing: 0) {
-                    Text(state.title)
-                        .font(.system(size: KelyphosDesign.FontSize.emphasized, weight: .semibold))
-                    if !state.subtitle.isEmpty {
-                        Text(state.subtitle)
-                            .font(.system(size: KelyphosDesign.FontSize.caption))
-                            .foregroundStyle(.secondary)
-                    }
-                }
-            }
-            trailingToolbar
-        }
-        #endif
-        .inspector(isPresented: inspectorVisibleBinding) {
-            inspectorContent
-        }
     }
 
     private var inspectorContent: some View {
@@ -177,41 +182,67 @@ public struct KelyphosShellView<
 
     // MARK: - Toolbar (P14: conditional on enabled flags)
 
+    #if os(macOS)
     @ToolbarContentBuilder
     private var trailingToolbar: some ToolbarContent {
         ToolbarSpacer(.flexible)
 
-        // Utility area toggle — only shown when utility is enabled
         if state.utilityEnabled && !configuration.utilityTabs.isEmpty {
             ToolbarItem {
-                Button {
-                    withAnimation(.easeInOut(duration: 0.15)) {
-                        state.utilityAreaVisible.toggle()
-                    }
-                } label: {
-                    Image(systemName: "rectangle.bottomthird.inset.filled")
-                }
-                .help(state.utilityAreaVisible ? "Hide Utility Area" : "Show Utility Area")
+                utilityToggleButton
             }
         }
 
-        // Inspector toggle — only shown when inspector is enabled
         if state.inspectorEnabled && !configuration.inspectorTabs.isEmpty {
             ToolbarItem {
-                Button {
-                    withAnimation(.easeInOut(duration: 0.15)) {
-                        state.inspectorVisible.toggle()
-                    }
-                } label: {
-                    Image(systemName: "sidebar.right")
-                }
-                .buttonStyle(.bordered)
-                .fixedSize()
-                .help(state.inspectorVisible ? "Hide Inspector" : "Show Inspector")
+                inspectorToggleButton
             }
         }
 
         ToolbarSpacer(.fixed)
+    }
+    #else
+    @ToolbarContentBuilder
+    private var iOSTrailingToolbar: some ToolbarContent {
+        ToolbarItemGroup(placement: .topBarTrailing) {
+            if state.utilityEnabled && !configuration.utilityTabs.isEmpty {
+                utilityToggleButton
+            }
+            if state.inspectorEnabled && !configuration.inspectorTabs.isEmpty {
+                inspectorToggleButton
+            }
+        }
+    }
+    #endif
+
+    private var utilityToggleButton: some View {
+        Button {
+            withAnimation(.easeInOut(duration: 0.15)) {
+                state.utilityAreaVisible.toggle()
+            }
+        } label: {
+            Image(systemName: "rectangle.bottomthird.inset.filled")
+        }
+        .help(state.utilityAreaVisible ? "Hide Utility Area" : "Show Utility Area")
+        .accessibilityIdentifier("UtilityToolbarToggle")
+        .accessibilityLabel("Toggle Utility Area")
+    }
+
+    private var inspectorToggleButton: some View {
+        Button {
+            withAnimation(.easeInOut(duration: 0.15)) {
+                state.inspectorVisible.toggle()
+            }
+        } label: {
+            Image(systemName: "sidebar.right")
+        }
+        #if os(macOS)
+        .buttonStyle(.bordered)
+        .fixedSize()
+        #endif
+        .help(state.inspectorVisible ? "Hide Inspector" : "Show Inspector")
+        .accessibilityIdentifier("InspectorToolbarToggle")
+        .accessibilityLabel("Toggle Inspector")
     }
 
     // MARK: - Background
