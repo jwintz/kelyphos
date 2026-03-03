@@ -36,7 +36,7 @@ public final class KelyphosShellState {
 
     // MARK: - Color Theme
 
-    public var colorTheme = KelyphosColorTheme()
+    public var colorTheme: any KelyphosColorThemeProtocol = KelyphosColorTheme()
 
     // MARK: - Panel Enabled (dynamic deactivation — P14)
 
@@ -49,9 +49,9 @@ public final class KelyphosShellState {
 
     // MARK: - Panel Visibility
 
-    public var navigatorVisible: Bool = true
+    public var navigatorVisible: Bool = false
     public var inspectorVisible: Bool = false
-    public var utilityAreaVisible: Bool = true
+    public var utilityAreaVisible: Bool = false
 
     // MARK: - Panel Dimensions
 

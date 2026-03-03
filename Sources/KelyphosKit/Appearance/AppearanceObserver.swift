@@ -14,7 +14,7 @@ public final class AppearanceObserver {
     public init() {}
 
     /// Start listening for system appearance changes.
-    public func start(updating theme: KelyphosColorTheme) {
+    public func start(updating theme: any KelyphosColorThemeProtocol) {
         #if os(macOS)
         observation = DistributedNotificationCenter.default().addObserver(
             forName: Notification.Name("AppleInterfaceThemeChangedNotification"),

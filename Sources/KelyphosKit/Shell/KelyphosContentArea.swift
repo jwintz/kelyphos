@@ -15,6 +15,7 @@ public struct KelyphosContentArea<
 >: View {
     @Bindable var state: KelyphosShellState
     var utilityTabs: [UtilTab]
+    var scrollable: Bool
     var detail: () -> Detail
 
     @State private var utilityItems: [UtilTab] = []
@@ -23,21 +24,28 @@ public struct KelyphosContentArea<
     public init(
         state: KelyphosShellState,
         utilityTabs: [UtilTab],
+        scrollable: Bool = true,
         @ViewBuilder detail: @escaping () -> Detail
     ) {
         self.state = state
         self.utilityTabs = utilityTabs
+        self.scrollable = scrollable
         self.detail = detail
     }
 
     public var body: some View {
         VStack(spacing: 0) {
-            // Scrollable main content — avoids imposing size constraints
-            ScrollView {
+            // Main content — scrollable or fixed depending on configuration
+            if scrollable {
+                ScrollView {
+                    detail()
+                        .frame(maxWidth: .infinity)
+                }
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+            } else {
                 detail()
-                    .frame(maxWidth: .infinity)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
             }
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
 
             // Utility area (collapsible) — fixed height at the bottom
             // P21b: 8pt margins outside, no padding inside, rounded top corners

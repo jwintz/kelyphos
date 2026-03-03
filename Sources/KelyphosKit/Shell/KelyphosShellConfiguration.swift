@@ -2,7 +2,8 @@
 
 import SwiftUI
 
-/// Configuration for KelyphosShellView, specifying panel tabs and the detail view.
+/// Configuration for KelyphosShellView, specifying panel tabs, the detail view,
+/// optional custom toolbar content, and scroll behaviour.
 public struct KelyphosShellConfiguration<
     NavTab: KelyphosPanel,
     InspTab: KelyphosPanel,
@@ -12,17 +13,48 @@ public struct KelyphosShellConfiguration<
     public var navigatorTabs: [NavTab]
     public var inspectorTabs: [InspTab]
     public var utilityTabs: [UtilTab]
+
+    // MARK: - Custom Toolbar
+
+    /// Injected into `.navigation` placement (macOS) / `.topBarLeading` (iOS).
+    /// Use for app-specific leading toolbar items such as a branch picker.
+    public var leadingToolbar: (() -> AnyView)?
+
+    /// Injected into `.principal` placement on both platforms.
+    /// Use for a centered toolbar element such as an environment pill.
+    public var principalToolbar: (() -> AnyView)?
+
+    /// Injected trailing, before the panel-toggle buttons.
+    /// Use for app-specific trailing items such as a keycast pill or package manager.
+    public var trailingToolbarPrefix: (() -> AnyView)?
+
+    // MARK: - Detail Scroll
+
+    /// When `true` (default), the detail content is wrapped in a `ScrollView`.
+    /// Set to `false` when the detail fills its own space (e.g. an editor view).
+    public var scrollable: Bool
+
+    // MARK: - Detail
+
     public var detail: () -> Detail
 
     public init(
         navigatorTabs: [NavTab],
         inspectorTabs: [InspTab],
         utilityTabs: [UtilTab] = [],
+        scrollable: Bool = true,
+        leadingToolbar: (() -> AnyView)? = nil,
+        principalToolbar: (() -> AnyView)? = nil,
+        trailingToolbarPrefix: (() -> AnyView)? = nil,
         @ViewBuilder detail: @escaping () -> Detail
     ) {
         self.navigatorTabs = navigatorTabs
         self.inspectorTabs = inspectorTabs
         self.utilityTabs = utilityTabs
+        self.scrollable = scrollable
+        self.leadingToolbar = leadingToolbar
+        self.principalToolbar = principalToolbar
+        self.trailingToolbarPrefix = trailingToolbarPrefix
         self.detail = detail
     }
 }

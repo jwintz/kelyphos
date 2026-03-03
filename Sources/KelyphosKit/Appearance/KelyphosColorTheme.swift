@@ -1,4 +1,4 @@
-// KelyphosColorTheme.swift - Observable color theme with light/dark variants
+// KelyphosColorTheme.swift - Observable color theme with light/dark variants + protocol
 
 import SwiftUI
 #if os(macOS)
@@ -7,11 +7,24 @@ import AppKit
 import UIKit
 #endif
 
+// MARK: - Protocol
+
+/// Minimum interface required by KelyphosShellState for appearance tracking.
+/// Conform to this protocol to provide a custom theme (e.g. Emacs-driven).
+public protocol KelyphosColorThemeProtocol: AnyObject {
+    /// Whether the current effective appearance is dark.
+    @MainActor var isDark: Bool { get }
+    /// Called by AppearanceObserver when the system appearance changes.
+    @MainActor func refreshAppearance()
+}
+
+// MARK: - Default Implementation
+
 /// Observable color theme with light and dark variants.
 /// The active variant is selected based on system appearance.
 @MainActor
 @Observable
-public final class KelyphosColorTheme {
+public final class KelyphosColorTheme: KelyphosColorThemeProtocol {
 
     // MARK: - Variants
 

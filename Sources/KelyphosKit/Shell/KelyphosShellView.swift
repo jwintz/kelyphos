@@ -162,6 +162,7 @@ public struct KelyphosShellView<
         KelyphosContentArea(
             state: state,
             utilityTabs: configuration.utilityTabs,
+            scrollable: configuration.scrollable,
             detail: configuration.detail
         )
         .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -192,7 +193,18 @@ public struct KelyphosShellView<
     #if os(macOS)
     @ToolbarContentBuilder
     private var trailingToolbar: some ToolbarContent {
+        if let leading = configuration.leadingToolbar {
+            ToolbarItem(placement: .navigation) { leading() }
+        }
+        if let principal = configuration.principalToolbar {
+            ToolbarItem(placement: .principal) { principal() }
+        }
+
         ToolbarSpacer(.flexible)
+
+        if let prefix = configuration.trailingToolbarPrefix {
+            ToolbarItem { prefix() }
+        }
 
         if state.utilityEnabled && !configuration.utilityTabs.isEmpty {
             ToolbarItem {
@@ -211,7 +223,16 @@ public struct KelyphosShellView<
     #else
     @ToolbarContentBuilder
     private var iOSTrailingToolbar: some ToolbarContent {
+        if let leading = configuration.leadingToolbar {
+            ToolbarItemGroup(placement: .topBarLeading) { leading() }
+        }
+        if let principal = configuration.principalToolbar {
+            ToolbarItem(placement: .principal) { principal() }
+        }
         ToolbarItemGroup(placement: .topBarTrailing) {
+            if let prefix = configuration.trailingToolbarPrefix {
+                prefix()
+            }
             if state.utilityEnabled && !configuration.utilityTabs.isEmpty {
                 utilityToggleButton
             }
