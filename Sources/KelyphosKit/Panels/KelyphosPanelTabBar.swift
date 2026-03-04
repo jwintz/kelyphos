@@ -22,6 +22,9 @@ public struct KelyphosPanelTabBar<Tab: KelyphosPanel>: View {
     @Binding var selection: Tab?
     var position: KelyphosTabBarPosition
     var selectionStyle: KelyphosTabBarSelectionStyle
+    /// When true, draws a subtle stroke border around the tab bar capsule.
+    /// Use when the parent panel has a glass background (glass-on-glass loses natural separation).
+    var showBorder: Bool
 
     @Namespace private var glassNamespace
 
@@ -29,12 +32,14 @@ public struct KelyphosPanelTabBar<Tab: KelyphosPanel>: View {
         items: Binding<[Tab]>,
         selection: Binding<Tab?>,
         position: KelyphosTabBarPosition = .top,
-        selectionStyle: KelyphosTabBarSelectionStyle = .material
+        selectionStyle: KelyphosTabBarSelectionStyle = .material,
+        showBorder: Bool = false
     ) {
         self._items = items
         self._selection = selection
         self.position = position
         self.selectionStyle = selectionStyle
+        self.showBorder = showBorder
     }
 
     public var body: some View {
@@ -86,6 +91,11 @@ public struct KelyphosPanelTabBar<Tab: KelyphosPanel>: View {
                 .padding(3)
                 .frame(maxWidth: .infinity)
                 .glassEffect(in: .capsule)
+                .overlay {
+                    if showBorder {
+                        Capsule().strokeBorder(.primary.opacity(0.12), lineWidth: 0.5)
+                    }
+                }
             }
             .padding(.horizontal, KelyphosDesign.Padding.compact)
             .padding(.vertical, KelyphosDesign.Spacing.tight)

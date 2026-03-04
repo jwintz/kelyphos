@@ -8,23 +8,26 @@ public struct KelyphosPanelContainer<Tab: KelyphosPanel>: View {
     @Binding var selection: Tab?
     var position: KelyphosTabBarPosition
     var selectionStyle: KelyphosTabBarSelectionStyle
+    var showBorder: Bool
 
     public init(
         items: Binding<[Tab]>,
         selection: Binding<Tab?>,
         position: KelyphosTabBarPosition = .top,
-        selectionStyle: KelyphosTabBarSelectionStyle = .material
+        selectionStyle: KelyphosTabBarSelectionStyle = .material,
+        showBorder: Bool = false
     ) {
         self._items = items
         self._selection = selection
         self.position = position
         self.selectionStyle = selectionStyle
+        self.showBorder = showBorder
     }
 
     public var body: some View {
         VStack(spacing: 0) {
             if position == .top {
-                KelyphosPanelTabBar(items: $items, selection: $selection, position: .top, selectionStyle: selectionStyle)
+                KelyphosPanelTabBar(items: $items, selection: $selection, position: .top, selectionStyle: selectionStyle, showBorder: showBorder)
             }
 
             if let selected = selection {

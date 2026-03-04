@@ -8,6 +8,11 @@ import AppKit
 import UIKit
 #endif
 
+extension Notification.Name {
+    /// Posted by `KelyphosShellState.saveAppearance()`. Object is the persistencePrefix string.
+    static let kelyphosAppearanceDidChange = Notification.Name("me.jwintz.kelyphos.appearanceDidChange")
+}
+
 @MainActor
 @Observable
 public final class KelyphosShellState {
@@ -83,19 +88,30 @@ public final class KelyphosShellState {
     private var kMaterial: String { "\(persistencePrefix).appearance.material" }
     private var kAppearance: String { "\(persistencePrefix).appearance.mode" }
 
+    nonisolated(unsafe) private var appearanceObserver: NSObjectProtocol?
+
     // MARK: - Init
 
     public init(persistencePrefix: String = "kelyphos") {
         self.persistencePrefix = persistencePrefix
         self.windowAppearance = Self.systemAppearanceMode()
+        self.reloadAppearance()
 
-        let defaults = UserDefaults.standard
-        if defaults.object(forKey: kAlpha) != nil {
-            self.backgroundAlpha = defaults.double(forKey: kAlpha)
+        appearanceObserver = NotificationCenter.default.addObserver(
+            forName: .kelyphosAppearanceDidChange,
+            object: nil,
+            queue: .main
+        ) { [weak self] notification in
+            guard let self,
+                  let prefix = notification.object as? String,
+                  prefix == self.persistencePrefix else { return }
+            self.reloadAppearance()
         }
-        if let mat = defaults.string(forKey: kMaterial),
-           let material = VibrancyMaterial(rawValue: mat) {
-            self.vibrancyMaterial = material
+    }
+
+    deinit {
+        if let token = appearanceObserver {
+            NotificationCenter.default.removeObserver(token)
         }
     }
 
@@ -116,6 +132,18 @@ public final class KelyphosShellState {
         let defaults = UserDefaults.standard
         defaults.set(backgroundAlpha, forKey: kAlpha)
         defaults.set(vibrancyMaterial.rawValue, forKey: kMaterial)
+        NotificationCenter.default.post(name: .kelyphosAppearanceDidChange, object: persistencePrefix)
+    }
+
+    private func reloadAppearance() {
+        let defaults = UserDefaults.standard
+        if defaults.object(forKey: kAlpha) != nil {
+            self.backgroundAlpha = defaults.double(forKey: kAlpha)
+        }
+        if let mat = defaults.string(forKey: kMaterial),
+           let material = VibrancyMaterial(rawValue: mat) {
+            self.vibrancyMaterial = material
+        }
     }
 
     // MARK: - Computed

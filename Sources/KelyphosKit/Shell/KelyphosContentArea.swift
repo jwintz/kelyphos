@@ -54,24 +54,20 @@ public struct KelyphosContentArea<
                     items: $utilityItems,
                     selection: $utilitySelection,
                     position: .top,
-                    selectionStyle: .material
+                    selectionStyle: .opaque,
+                    showBorder: true
                 )
                 .frame(height: state.utilityAreaHeight)
                 #if !os(macOS)
                 .dynamicTypeSize(.xSmall ... .medium)
                 #endif
                 .scrollContentBackground(.hidden)
-                .background {
-                    ZStack {
-                        Rectangle().fill(.ultraThinMaterial)
-                        backgroundTint
-                            .opacity(Double(state.backgroundAlpha))
-                    }
-                    .clipShape(.rect(
-                        topLeadingRadius: KelyphosDesign.CornerRadius.content,
-                        topTrailingRadius: KelyphosDesign.CornerRadius.content
-                    ))
-                }
+                .glassEffect(in: UnevenRoundedRectangle(
+                    topLeadingRadius: KelyphosDesign.CornerRadius.content,
+                    bottomLeadingRadius: 0,
+                    bottomTrailingRadius: 0,
+                    topTrailingRadius: KelyphosDesign.CornerRadius.content
+                ))
                 .padding(.horizontal, KelyphosDesign.Padding.compact)
             }
         }
