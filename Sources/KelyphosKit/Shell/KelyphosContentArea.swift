@@ -62,12 +62,23 @@ public struct KelyphosContentArea<
                 .dynamicTypeSize(.xSmall ... .medium)
                 #endif
                 .scrollContentBackground(.hidden)
-                .glassEffect(in: UnevenRoundedRectangle(
-                    topLeadingRadius: KelyphosDesign.CornerRadius.content,
+                #if os(macOS)
+                .clipShape(UnevenRoundedRectangle(
+                    topLeadingRadius: KelyphosDesign.CornerRadius.glass,
                     bottomLeadingRadius: 0,
                     bottomTrailingRadius: 0,
-                    topTrailingRadius: KelyphosDesign.CornerRadius.content
+                    topTrailingRadius: KelyphosDesign.CornerRadius.glass
                 ))
+                .glassEffect(in: UnevenRoundedRectangle(
+                    topLeadingRadius: KelyphosDesign.CornerRadius.glass,
+                    bottomLeadingRadius: 0,
+                    bottomTrailingRadius: 0,
+                    topTrailingRadius: KelyphosDesign.CornerRadius.glass
+                ))
+                #else
+                .clipShape(.rect(cornerRadius: KelyphosDesign.CornerRadius.glass))
+                .glassEffect(in: .rect(cornerRadius: KelyphosDesign.CornerRadius.glass))
+                #endif
                 .padding(.horizontal, KelyphosDesign.Padding.compact)
             }
         }

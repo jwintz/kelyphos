@@ -152,7 +152,7 @@ public struct KelyphosShellView<
                                 Color(uiColor: state.backgroundColor)
                                     .opacity(Double(state.backgroundAlpha))
                             }
-                            .clipShape(UnevenRoundedRectangle(topLeadingRadius: 12, bottomLeadingRadius: 12))
+                            .clipShape(UnevenRoundedRectangle(topLeadingRadius: KelyphosDesign.CornerRadius.glass, bottomLeadingRadius: KelyphosDesign.CornerRadius.glass))
                         }
                         .shadow(color: .black.opacity(0.15), radius: 8, x: -2)
                         .transition(.move(edge: .trailing))
