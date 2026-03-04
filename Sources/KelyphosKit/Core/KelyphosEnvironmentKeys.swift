@@ -2,6 +2,13 @@
 
 import SwiftUI
 
+// MARK: - Shell State Focused Value
+
+extension FocusedValues {
+    /// The shell state of the currently focused Kelyphos scene window.
+    @Entry public var kelyphosShellState: KelyphosShellState? = nil
+}
+
 // MARK: - Shell State Environment Key
 
 private struct KelyphosShellStateKey: EnvironmentKey {

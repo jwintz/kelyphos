@@ -28,6 +28,12 @@ public struct KelyphosShellConfiguration<
     /// Use for app-specific trailing items such as a keycast pill or package manager.
     public var trailingToolbarPrefix: (() -> AnyView)?
 
+    // MARK: - Window Tab Actions (macOS)
+
+    /// Called when the user triggers "Toggle Tab Bar" (Cmd+\).
+    /// Defaults to `NSApp.keyWindow?.toggleTabBar(nil)` when nil.
+    public var onToggleTabBar: (() -> Void)?
+
     // MARK: - Detail Scroll
 
     /// When `true` (default), the detail content is wrapped in a `ScrollView`.
@@ -46,6 +52,7 @@ public struct KelyphosShellConfiguration<
         leadingToolbar: (() -> AnyView)? = nil,
         principalToolbar: (() -> AnyView)? = nil,
         trailingToolbarPrefix: (() -> AnyView)? = nil,
+        onToggleTabBar: (() -> Void)? = nil,
         @ViewBuilder detail: @escaping () -> Detail
     ) {
         self.navigatorTabs = navigatorTabs
@@ -55,6 +62,7 @@ public struct KelyphosShellConfiguration<
         self.leadingToolbar = leadingToolbar
         self.principalToolbar = principalToolbar
         self.trailingToolbarPrefix = trailingToolbarPrefix
+        self.onToggleTabBar = onToggleTabBar
         self.detail = detail
     }
 }

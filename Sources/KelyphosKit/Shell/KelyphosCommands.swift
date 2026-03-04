@@ -8,19 +8,18 @@
 import SwiftUI
 
 /// Menu commands for the Kelyphos shell.
-/// Add to your scene with `.commands { KelyphosCommands(state:) }`.
+/// Add to your scene with `.commands { KelyphosCommands() }`.
 public struct KelyphosCommands: Commands {
-    @Bindable var state: KelyphosShellState
+    @FocusedValue(\.kelyphosShellState) private var state: KelyphosShellState?
 
-    public init(state: KelyphosShellState) {
-        self.state = state
-    }
+    public init() {}
 
     public var body: some Commands {
         CommandGroup(after: .toolbar) {
             // Navigator
             Section {
-                Button(state.navigatorVisible ? "Hide Navigator" : "Show Navigator") {
+                Button(state?.navigatorVisible == true ? "Hide Navigator" : "Show Navigator") {
+                    guard let state else { return }
                     withAnimation(.easeInOut(duration: 0.15)) {
                         state.navigatorVisible.toggle()
                     }
@@ -36,7 +35,8 @@ public struct KelyphosCommands: Commands {
 
             // Inspector
             Section {
-                Button(state.inspectorVisible ? "Hide Inspector" : "Show Inspector") {
+                Button(state?.inspectorVisible == true ? "Hide Inspector" : "Show Inspector") {
+                    guard let state else { return }
                     withAnimation(.easeInOut(duration: 0.15)) {
                         state.inspectorVisible.toggle()
                     }
@@ -52,7 +52,8 @@ public struct KelyphosCommands: Commands {
 
             // Utility
             Section {
-                Button(state.utilityAreaVisible ? "Hide Utility Area" : "Show Utility Area") {
+                Button(state?.utilityAreaVisible == true ? "Hide Utility Area" : "Show Utility Area") {
+                    guard let state else { return }
                     withAnimation(.easeInOut(duration: 0.15)) {
                         state.utilityAreaVisible.toggle()
                     }
@@ -76,8 +77,8 @@ public struct KelyphosCommands: Commands {
 
     private func navTab(_ n: Int) -> some View {
         Button("Navigator Tab \(n)") {
+            guard let state else { return }
             let idx = n - 1
-            // P16: If already on this tab and visible, collapse
             if state.navigatorVisible && state.selectedNavigatorIndex == idx {
                 withAnimation(.easeInOut(duration: 0.15)) {
                     state.navigatorVisible = false
@@ -90,11 +91,12 @@ public struct KelyphosCommands: Commands {
             }
         }
         .keyboardShortcut(KeyEquivalent(Character("\(n)")), modifiers: .command)
-        .disabled(n > state.navigatorTabCount)
+        .disabled(n > (state?.navigatorTabCount ?? 0))
     }
 
     private func inspTab(_ n: Int) -> some View {
         Button("Inspector Tab \(n)") {
+            guard let state else { return }
             let idx = n - 1
             if state.inspectorVisible && state.selectedInspectorIndex == idx {
                 withAnimation(.easeInOut(duration: 0.15)) {
@@ -108,11 +110,12 @@ public struct KelyphosCommands: Commands {
             }
         }
         .keyboardShortcut(KeyEquivalent(Character("\(n)")), modifiers: [.command, .option])
-        .disabled(n > state.inspectorTabCount)
+        .disabled(n > (state?.inspectorTabCount ?? 0))
     }
 
     private func utilTab(_ n: Int) -> some View {
         Button("Utility Tab \(n)") {
+            guard let state else { return }
             let idx = n - 1
             if state.utilityAreaVisible && state.selectedUtilityIndex == idx {
                 withAnimation(.easeInOut(duration: 0.15)) {
@@ -126,6 +129,6 @@ public struct KelyphosCommands: Commands {
             }
         }
         .keyboardShortcut(KeyEquivalent(Character("\(n)")), modifiers: [.command, .option, .shift])
-        .disabled(n > state.utilityTabCount)
+        .disabled(n > (state?.utilityTabCount ?? 0))
     }
 }

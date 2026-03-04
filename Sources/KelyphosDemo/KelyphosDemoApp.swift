@@ -41,8 +41,9 @@ private final class LaunchSuppressor: @unchecked Sendable {
 
 @main
 struct KelyphosDemoApp: App {
-    @State private var shellState = KelyphosShellState(persistencePrefix: "kelyphos.demo")
-    @State private var showcaseState = ShowcaseState()
+    /// Dedicated shell state for the Settings panel (appearance prefs).
+    /// Each scene owns its own shellState; this one is only used by KelyphosSettingsView.
+    @State private var settingsShellState = KelyphosShellState(persistencePrefix: "kelyphos.demo")
     @Environment(\.openWindow) private var openWindow
 
     #if os(macOS)
@@ -77,35 +78,10 @@ struct KelyphosDemoApp: App {
 
     private var mainWindowGroup: some Scene {
         WindowGroup("Kelyphos Demo") {
-            KelyphosShellView(
-                state: shellState,
-                configuration: KelyphosShellConfiguration(
-                    navigatorTabs: DemoNavigatorTab.allCases.map { $0 },
-                    inspectorTabs: DemoInspectorTab.allCases.map { $0 },
-                    utilityTabs: DemoUtilityTab.allCases.map { $0 },
-                    detail: { DemoContentView() }
-                )
-            )
-            .environment(\.showcaseState, showcaseState)
-            .onAppear {
-                shellState.title = "Kelyphos Demo"
-                shellState.subtitle = "HIG Showcase"
-
-                #if os(macOS)
-                if showWelcomeOnStartup {
-                    for window in NSApp.windows where window.isVisible && window.title.isEmpty {
-                        window.orderOut(nil)
-                    }
-                    openWindow(id: "welcome")
-                }
-                #endif
-            }
-            .onChange(of: showcaseState.selectedItem) { _, newItem in
-                shellState.subtitle = newItem?.title ?? "HIG Showcase"
-            }
+            DemoSceneView()
         }
         .commands {
-            KelyphosCommands(state: shellState)
+            KelyphosCommands()
             #if os(macOS)
             CommandGroup(replacing: .appInfo) {
                 Button("About Kelyphos") {
@@ -122,7 +98,7 @@ struct KelyphosDemoApp: App {
             TabView {
                 GeneralSettingsTab()
                     .tabItem { Label("General", systemImage: "gearshape") }
-                KelyphosSettingsView(state: shellState)
+                KelyphosSettingsView(state: settingsShellState)
                     .tabItem { Label("Appearance", systemImage: "paintbrush") }
             }
         }
@@ -172,4 +148,46 @@ struct KelyphosDemoApp: App {
         }
     }
     #endif
+}
+
+// MARK: - Per-scene root view
+
+/// Each window/tab gets its own instance of this view, owning independent
+/// shell and showcase state so tabs can navigate independently.
+private struct DemoSceneView: View {
+    @State private var shellState = KelyphosShellState(persistencePrefix: "kelyphos.demo")
+    @State private var showcaseState = ShowcaseState()
+    @Environment(\.openWindow) private var openWindow
+    #if os(macOS)
+    @AppStorage("kelyphos.demo.showWelcomeOnStartup") private var showWelcomeOnStartup = true
+    #endif
+
+    var body: some View {
+        KelyphosShellView(
+            state: shellState,
+            configuration: KelyphosShellConfiguration(
+                navigatorTabs: DemoNavigatorTab.allCases.map { $0 },
+                inspectorTabs: DemoInspectorTab.allCases.map { $0 },
+                utilityTabs: DemoUtilityTab.allCases.map { $0 },
+                detail: { DemoContentView() }
+            )
+        )
+        .environment(\.showcaseState, showcaseState)
+        .onAppear {
+            shellState.title = "Kelyphos Demo"
+            shellState.subtitle = "HIG Showcase"
+
+            #if os(macOS)
+            if showWelcomeOnStartup {
+                for window in NSApp.windows where window.isVisible && window.title.isEmpty {
+                    window.orderOut(nil)
+                }
+                openWindow(id: "welcome")
+            }
+            #endif
+        }
+        .onChange(of: showcaseState.selectedItem) { _, newItem in
+            shellState.subtitle = newItem?.title ?? "HIG Showcase"
+        }
+    }
 }

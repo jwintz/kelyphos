@@ -92,6 +92,9 @@ public struct KelyphosShellView<
             .overlay { keybindingsOverlay }
             .environment(\.kelyphosShellState, state)
             .environment(\.kelyphosKeybindingRegistry, KelyphosKeybindingRegistry())
+            #if os(macOS)
+            .focusedSceneValue(\.kelyphosShellState, state)
+            #endif
     }
 
     // MARK: - Main Content
@@ -432,34 +435,39 @@ private struct ShellLifecycleModifier<
     }
 
     #if os(macOS)
-    /// Install NSEvent local monitor to intercept CMD+SHIFT+/ before macOS Help menu.
+    /// Install NSEvent local monitor to intercept shell-level key shortcuts.
     private func installKeyMonitor() {
-        print("[Kelyphos] Installing key monitor for CMD+SHIFT+/")
-        keyMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { event in
+        keyMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { [configuration] event in
             let flags = event.modifierFlags.intersection(.deviceIndependentFlagsMask)
-            let chars = event.charactersIgnoringModifiers ?? "<nil>"
             let keyCode = event.keyCode
 
-            // Log all CMD+SHIFT combos for debugging
-            if flags.contains(.command) && flags.contains(.shift) {
-                print("[Kelyphos] CMD+SHIFT key event: chars='\(chars)' keyCode=\(keyCode) flags=\(flags.rawValue)")
+            if flags == .command {
+                switch keyCode {
+                case 42: // \ — Toggle Tab Bar
+                    if let handler = configuration.onToggleTabBar {
+                        handler()
+                    } else {
+                        NSApp.keyWindow?.toggleTabBar(nil)
+                    }
+                    return nil
+                default:
+                    break
+                }
             }
 
-            // keyCode 44 = "/" on US keyboard (the physical key)
-            // charactersIgnoringModifiers may report "?" when shift is held
+            // keyCode 44 = "/" on US keyboard; CMD+SHIFT+/ → keybindings overlay
+            // macOS reserves this for the Help menu — intercept before it gets there.
             let isSlashKey = keyCode == 44
             let isCmdShift = flags == [.command, .shift]
-
             if isSlashKey && isCmdShift {
-                print("[Kelyphos] CMD+SHIFT+/ intercepted — toggling keybindings overlay (current: \(state.showKeybindingsOverlay))")
                 withAnimation(.easeInOut(duration: 0.15)) {
                     state.showKeybindingsOverlay.toggle()
                 }
-                return nil // consume the event
+                return nil
             }
+
             return event
         }
-        print("[Kelyphos] Key monitor installed: \(keyMonitor != nil)")
     }
     #endif
 
