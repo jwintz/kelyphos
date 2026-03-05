@@ -11,7 +11,7 @@ import UIKit
 
 /// Minimum interface required by KelyphosShellState for appearance tracking.
 /// Conform to this protocol to provide a custom theme (e.g. Emacs-driven).
-public protocol KelyphosColorThemeProtocol: AnyObject {
+public protocol KelyphosColorThemeProtocol: AnyObject, Sendable {
     /// Whether the current effective appearance is dark.
     @MainActor var isDark: Bool { get }
     /// Called by AppearanceObserver when the system appearance changes.

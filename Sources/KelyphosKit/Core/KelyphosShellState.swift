@@ -88,7 +88,7 @@ public final class KelyphosShellState {
     private var kMaterial: String { "\(persistencePrefix).appearance.material" }
     private var kAppearance: String { "\(persistencePrefix).appearance.mode" }
 
-    nonisolated(unsafe) private var appearanceObserver: NSObjectProtocol?
+    @ObservationIgnored nonisolated(unsafe) private var appearanceObserver: NSObjectProtocol?
 
     // MARK: - Init
 
@@ -105,7 +105,9 @@ public final class KelyphosShellState {
             guard let self,
                   let prefix = notification.object as? String,
                   prefix == self.persistencePrefix else { return }
-            self.reloadAppearance()
+            MainActor.assumeIsolated {
+                self.reloadAppearance()
+            }
         }
     }
 
