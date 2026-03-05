@@ -40,6 +40,12 @@ public struct KelyphosShellConfiguration<
     /// Set to `false` when the detail fills its own space (e.g. an editor view).
     public var scrollable: Bool
 
+    // MARK: - Settings (iOS sheet)
+
+    /// On iOS/iPadOS, a gear button is added to the toolbar that presents this
+    /// view in a sheet. On macOS, settings use the native `Settings` scene.
+    public var settingsView: (() -> AnyView)?
+
     // MARK: - Detail
 
     public var detail: () -> Detail
@@ -53,6 +59,7 @@ public struct KelyphosShellConfiguration<
         principalToolbar: (() -> AnyView)? = nil,
         trailingToolbarPrefix: (() -> AnyView)? = nil,
         onToggleTabBar: (() -> Void)? = nil,
+        settingsView: (() -> AnyView)? = nil,
         @ViewBuilder detail: @escaping () -> Detail
     ) {
         self.navigatorTabs = navigatorTabs
@@ -63,6 +70,7 @@ public struct KelyphosShellConfiguration<
         self.principalToolbar = principalToolbar
         self.trailingToolbarPrefix = trailingToolbarPrefix
         self.onToggleTabBar = onToggleTabBar
+        self.settingsView = settingsView
         self.detail = detail
     }
 }

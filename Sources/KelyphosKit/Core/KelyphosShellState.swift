@@ -87,6 +87,9 @@ public final class KelyphosShellState {
     private var kAlpha: String { "\(persistencePrefix).appearance.alpha" }
     private var kMaterial: String { "\(persistencePrefix).appearance.material" }
     private var kAppearance: String { "\(persistencePrefix).appearance.mode" }
+    private var kNavigatorVisible: String { "\(persistencePrefix).panel.navigatorVisible" }
+    private var kInspectorVisible: String { "\(persistencePrefix).panel.inspectorVisible" }
+    private var kUtilityVisible: String { "\(persistencePrefix).panel.utilityVisible" }
 
     @ObservationIgnored nonisolated(unsafe) private var appearanceObserver: NSObjectProtocol?
 
@@ -96,6 +99,7 @@ public final class KelyphosShellState {
         self.persistencePrefix = persistencePrefix
         self.windowAppearance = Self.systemAppearanceMode()
         self.reloadAppearance()
+        self.reloadPanelState()
 
         appearanceObserver = NotificationCenter.default.addObserver(
             forName: .kelyphosAppearanceDidChange,
@@ -145,6 +149,27 @@ public final class KelyphosShellState {
         if let mat = defaults.string(forKey: kMaterial),
            let material = VibrancyMaterial(rawValue: mat) {
             self.vibrancyMaterial = material
+        }
+    }
+
+    /// Save navigator/inspector/utility panel visibility to UserDefaults.
+    public func savePanelState() {
+        let defaults = UserDefaults.standard
+        defaults.set(navigatorVisible, forKey: kNavigatorVisible)
+        defaults.set(inspectorVisible, forKey: kInspectorVisible)
+        defaults.set(utilityAreaVisible, forKey: kUtilityVisible)
+    }
+
+    private func reloadPanelState() {
+        let defaults = UserDefaults.standard
+        if defaults.object(forKey: kNavigatorVisible) != nil {
+            self.navigatorVisible = defaults.bool(forKey: kNavigatorVisible)
+        }
+        if defaults.object(forKey: kInspectorVisible) != nil {
+            self.inspectorVisible = defaults.bool(forKey: kInspectorVisible)
+        }
+        if defaults.object(forKey: kUtilityVisible) != nil {
+            self.utilityAreaVisible = defaults.bool(forKey: kUtilityVisible)
         }
     }
 

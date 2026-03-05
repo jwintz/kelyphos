@@ -37,6 +37,7 @@ public struct KelyphosShellView<
 
     @State private var columnVisibility: NavigationSplitViewVisibility = .detailOnly
     @State private var didAppear = false
+    @State private var showingSettings = false
 
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
 
@@ -158,6 +159,21 @@ public struct KelyphosShellView<
                         .transition(.move(edge: .trailing))
                 }
             }
+            .sheet(isPresented: $showingSettings) {
+                if let settingsBuilder = configuration.settingsView {
+                    NavigationStack {
+                        settingsBuilder()
+                            .navigationTitle("Settings")
+                            .navigationBarTitleDisplayMode(.inline)
+                            .toolbar {
+                                ToolbarItem(placement: .confirmationAction) {
+                                    Button("Done") { showingSettings = false }
+                                }
+                            }
+                    }
+                    .presentationDetents([.medium, .large])
+                }
+            }
             #endif
     }
 
@@ -241,6 +257,13 @@ public struct KelyphosShellView<
             }
             if state.inspectorEnabled && !configuration.inspectorTabs.isEmpty {
                 inspectorToggleButton
+            }
+            if configuration.settingsView != nil {
+                Button {
+                    showingSettings = true
+                } label: {
+                    Image(systemName: "gearshape")
+                }
             }
         }
     }
