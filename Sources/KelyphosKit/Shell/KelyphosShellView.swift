@@ -384,6 +384,7 @@ private struct ShellLifecycleModifier<
                 DispatchQueue.main.async { didAppear = true }
                 appearanceObserver.start(updating: state.colorTheme)
                 #if os(macOS)
+                applyAppearance(state.windowAppearance)
                 installKeyMonitor()
                 #endif
             }

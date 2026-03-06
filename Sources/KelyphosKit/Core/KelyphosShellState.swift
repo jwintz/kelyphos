@@ -138,6 +138,7 @@ public final class KelyphosShellState {
         let defaults = UserDefaults.standard
         defaults.set(backgroundAlpha, forKey: kAlpha)
         defaults.set(vibrancyMaterial.rawValue, forKey: kMaterial)
+        defaults.set(windowAppearance, forKey: kAppearance)
         NotificationCenter.default.post(name: .kelyphosAppearanceDidChange, object: persistencePrefix)
     }
 
@@ -149,6 +150,9 @@ public final class KelyphosShellState {
         if let mat = defaults.string(forKey: kMaterial),
            let material = VibrancyMaterial(rawValue: mat) {
             self.vibrancyMaterial = material
+        }
+        if let mode = defaults.string(forKey: kAppearance) {
+            self.windowAppearance = mode
         }
     }
 
