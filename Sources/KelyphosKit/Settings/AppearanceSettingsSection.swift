@@ -63,5 +63,8 @@ public struct AppearanceSettingsSection: View {
             .labelsHidden()
             .frame(maxWidth: .infinity)
         }
+        .onChange(of: state.windowAppearance) { _, _ in state.saveAppearance() }
+        .onChange(of: state.backgroundAlpha)  { _, _ in state.saveAppearance() }
+        .onChange(of: state.vibrancyMaterial) { _, _ in state.saveAppearance() }
     }
 }

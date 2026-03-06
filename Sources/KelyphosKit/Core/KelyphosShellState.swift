@@ -22,6 +22,11 @@ public final class KelyphosShellState {
     /// Prefix for UserDefaults keys, preventing collisions between client apps.
     public let persistencePrefix: String
 
+    /// Prefix used specifically for panel-visibility keys.
+    /// Defaults to `persistencePrefix`; override to isolate per-window panel state
+    /// while keeping appearance keys shared with the rest of the app.
+    public let panelPersistencePrefix: String
+
     // MARK: - Title
 
     public var title: String = ""
@@ -87,16 +92,17 @@ public final class KelyphosShellState {
     private var kAlpha: String { "\(persistencePrefix).appearance.alpha" }
     private var kMaterial: String { "\(persistencePrefix).appearance.material" }
     private var kAppearance: String { "\(persistencePrefix).appearance.mode" }
-    private var kNavigatorVisible: String { "\(persistencePrefix).panel.navigatorVisible" }
-    private var kInspectorVisible: String { "\(persistencePrefix).panel.inspectorVisible" }
-    private var kUtilityVisible: String { "\(persistencePrefix).panel.utilityVisible" }
+    private var kNavigatorVisible: String { "\(panelPersistencePrefix).panel.navigatorVisible" }
+    private var kInspectorVisible: String { "\(panelPersistencePrefix).panel.inspectorVisible" }
+    private var kUtilityVisible: String { "\(panelPersistencePrefix).panel.utilityVisible" }
 
     @ObservationIgnored nonisolated(unsafe) private var appearanceObserver: NSObjectProtocol?
 
     // MARK: - Init
 
-    public init(persistencePrefix: String = "kelyphos") {
+    public init(persistencePrefix: String = "kelyphos", panelPrefix: String? = nil) {
         self.persistencePrefix = persistencePrefix
+        self.panelPersistencePrefix = panelPrefix ?? persistencePrefix
         self.windowAppearance = Self.systemAppearanceMode()
         self.reloadAppearance()
         self.reloadPanelState()
