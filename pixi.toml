@@ -1,0 +1,24 @@
+[workspace]
+name = "kelyphos"
+version = "0.1.0"
+description = "A SwiftUI shell framework for macOS and iPadOS apps"
+channels = ["conda-forge"]
+platforms = ["osx-arm64", "osx-64"]
+
+[tasks]
+# Force-regenerate the Xcode project from project.yml (always runs XcodeGen).
+generate = "swift run xcodegen generate --spec project.yml"
+
+# Regenerate only when project.yml is newer than the generated project.pbxproj.
+generate-if-needed = "bash -c 'test Kelyphos.xcodeproj/project.pbxproj -nt project.yml || swift run xcodegen generate --spec project.yml'"
+
+build = { cmd = "xcodebuild -project Kelyphos.xcodeproj -scheme KelyphosDemo -configuration Debug build -allowProvisioningUpdates", depends-on = ["generate-if-needed"], env = { SDKROOT = "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk" } }
+
+# Run unit tests.
+test = { cmd = "xcodebuild -project Kelyphos.xcodeproj -scheme KelyphosDemo -configuration Debug test -allowProvisioningUpdates -destination 'platform=macOS'", depends-on = ["generate-if-needed"], env = { SDKROOT = "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk" } }
+
+# Launch the already-built app.
+run = "bash -c 'BUILT=$(xcodebuild -project Kelyphos.xcodeproj -scheme KelyphosDemo -configuration Debug -showBuildSettings 2>/dev/null | grep BUILT_PRODUCTS_DIR | sed \"s/.*= //\" | head -n 1); open -W \"$BUILT/KelyphosDemo.app\"'"
+
+# Build + run in one step.
+build-and-run = { cmd = "bash -c 'BUILT=$(xcodebuild -project Kelyphos.xcodeproj -scheme KelyphosDemo -configuration Debug -showBuildSettings 2>/dev/null | grep BUILT_PRODUCTS_DIR | sed \"s/.*= //\" | head -n 1); open -W \"$BUILT/KelyphosDemo.app\"'", depends-on = ["build"] }
