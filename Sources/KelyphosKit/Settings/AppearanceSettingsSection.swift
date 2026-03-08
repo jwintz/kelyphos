@@ -54,14 +54,15 @@ public struct AppearanceSettingsSection: View {
         }
 
         Section("Presets") {
-            Picker("Presets", selection: presetBinding) {
-                Text("Clear").tag(Optional(AppearancePreset.clear))
-                Text("Balanced").tag(Optional(AppearancePreset.balanced))
-                Text("Solid").tag(Optional(AppearancePreset.solid))
+            LabeledContent("Presets") {
+                Picker("Presets", selection: presetBinding) {
+                    Text("Clear").tag(Optional(AppearancePreset.clear))
+                    Text("Balanced").tag(Optional(AppearancePreset.balanced))
+                    Text("Solid").tag(Optional(AppearancePreset.solid))
+                }
+                .pickerStyle(.segmented)
+                .labelsHidden()
             }
-            .pickerStyle(.segmented)
-            .labelsHidden()
-            .frame(maxWidth: .infinity)
         }
         .onChange(of: state.windowAppearance) { _, _ in state.saveAppearance() }
         .onChange(of: state.backgroundAlpha)  { _, _ in state.saveAppearance() }

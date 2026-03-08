@@ -39,7 +39,7 @@ public struct KelyphosKeybindingsOverlay: View {
             overlayContent
         }
         .frame(width: 640, height: 480)
-        .background(.thickMaterial, in: .rect(cornerRadius: KelyphosDesign.CornerRadius.glass))
+        .glassEffect(in: .rect(cornerRadius: KelyphosDesign.CornerRadius.glass))
         .shadow(color: .black.opacity(0.3), radius: 20, y: 10)
     }
 
@@ -108,7 +108,7 @@ public struct KelyphosKeybindingsOverlay: View {
                                 .foregroundStyle(.secondary)
                                 .padding(.horizontal, 6)
                                 .padding(.vertical, 2)
-                                .background(.quaternary, in: .capsule)
+                                .glassEffect(in: .capsule)
                         }
                     }
                 }
