@@ -55,7 +55,8 @@ public struct KelyphosContentArea<
                     selection: $utilitySelection,
                     position: .top,
                     selectionStyle: .opaque,
-                    showBorder: true
+                    showBorder: true,
+                    tabBarHorizontalPadding: 4
                 )
                 .frame(height: state.utilityAreaHeight)
                 #if !os(macOS)

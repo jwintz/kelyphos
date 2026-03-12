@@ -25,8 +25,9 @@ public struct KelyphosShellConfiguration<
     public var principalToolbar: (() -> AnyView)?
 
     /// Injected trailing, before the panel-toggle buttons.
-    /// Use for app-specific trailing items such as a keycast pill or package manager.
-    public var trailingToolbarPrefix: (() -> AnyView)?
+    /// Each element gets its own `ToolbarItem` for independent spacing.
+    /// Use for app-specific trailing items such as pills or status indicators.
+    public var trailingToolbarItems: [() -> AnyView]
 
     // MARK: - Window Tab Actions (macOS)
 
@@ -57,7 +58,7 @@ public struct KelyphosShellConfiguration<
         scrollable: Bool = true,
         leadingToolbar: (() -> AnyView)? = nil,
         principalToolbar: (() -> AnyView)? = nil,
-        trailingToolbarPrefix: (() -> AnyView)? = nil,
+        trailingToolbarItems: [() -> AnyView] = [],
         onToggleTabBar: (() -> Void)? = nil,
         settingsView: (() -> AnyView)? = nil,
         @ViewBuilder detail: @escaping () -> Detail
@@ -68,7 +69,7 @@ public struct KelyphosShellConfiguration<
         self.scrollable = scrollable
         self.leadingToolbar = leadingToolbar
         self.principalToolbar = principalToolbar
-        self.trailingToolbarPrefix = trailingToolbarPrefix
+        self.trailingToolbarItems = trailingToolbarItems
         self.onToggleTabBar = onToggleTabBar
         self.settingsView = settingsView
         self.detail = detail

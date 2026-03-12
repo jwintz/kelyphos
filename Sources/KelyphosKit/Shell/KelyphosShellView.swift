@@ -45,6 +45,7 @@ public struct KelyphosShellView<
     @State private var navigatorSelection: NavTab?
     @State private var inspectorItems: [InspTab] = []
     @State private var inspectorSelection: InspTab?
+    @State private var keybindingRegistry = KelyphosKeybindingRegistry()
 
     private let appearanceObserver = AppearanceObserver()
 
@@ -92,7 +93,7 @@ public struct KelyphosShellView<
             ))
             .overlay { keybindingsOverlay }
             .environment(\.kelyphosShellState, state)
-            .environment(\.kelyphosKeybindingRegistry, KelyphosKeybindingRegistry())
+            .environment(\.kelyphosKeybindingRegistry, keybindingRegistry)
             #if os(macOS)
             .focusedSceneValue(\.kelyphosShellState, state)
             #endif
@@ -221,9 +222,9 @@ public struct KelyphosShellView<
 
         ToolbarSpacer(.flexible)
 
-        if let prefix = configuration.trailingToolbarPrefix {
-            ToolbarItem { prefix() }
-        }
+        // Emit each trailing toolbar item as its own ToolbarItem for independent spacing.
+        // @ToolbarContentBuilder has a 10-item limit, so we split into two builder properties.
+        trailingToolbarInjectedItems
 
         if state.utilityEnabled && !configuration.utilityTabs.isEmpty {
             ToolbarItem {
@@ -239,6 +240,30 @@ public struct KelyphosShellView<
 
         ToolbarSpacer(.fixed)
     }
+
+    /// Separate builder property for injected trailing items to stay within the
+    /// 10-expression limit of `@ToolbarContentBuilder`. Supports up to 6 items.
+    @ToolbarContentBuilder
+    private var trailingToolbarInjectedItems: some ToolbarContent {
+        if configuration.trailingToolbarItems.count > 0 {
+            ToolbarItem { configuration.trailingToolbarItems[0]() }
+        }
+        if configuration.trailingToolbarItems.count > 1 {
+            ToolbarItem { configuration.trailingToolbarItems[1]() }
+        }
+        if configuration.trailingToolbarItems.count > 2 {
+            ToolbarItem { configuration.trailingToolbarItems[2]() }
+        }
+        if configuration.trailingToolbarItems.count > 3 {
+            ToolbarItem { configuration.trailingToolbarItems[3]() }
+        }
+        if configuration.trailingToolbarItems.count > 4 {
+            ToolbarItem { configuration.trailingToolbarItems[4]() }
+        }
+        if configuration.trailingToolbarItems.count > 5 {
+            ToolbarItem { configuration.trailingToolbarItems[5]() }
+        }
+    }
     #else
     @ToolbarContentBuilder
     private var iOSTrailingToolbar: some ToolbarContent {
@@ -249,8 +274,8 @@ public struct KelyphosShellView<
             ToolbarItem(placement: .principal) { principal() }
         }
         ToolbarItemGroup(placement: .topBarTrailing) {
-            if let prefix = configuration.trailingToolbarPrefix {
-                prefix()
+            ForEach(Array(configuration.trailingToolbarItems.enumerated()), id: \.offset) { _, item in
+                item()
             }
             if state.utilityEnabled && !configuration.utilityTabs.isEmpty {
                 utilityToggleButton

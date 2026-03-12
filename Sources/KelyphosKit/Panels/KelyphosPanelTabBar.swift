@@ -25,6 +25,8 @@ public struct KelyphosPanelTabBar<Tab: KelyphosPanel>: View {
     /// When true, draws a subtle stroke border around the tab bar capsule.
     /// Use when the parent panel has a glass background (glass-on-glass loses natural separation).
     var showBorder: Bool
+    /// Horizontal padding around the tab bar. Defaults to `KelyphosDesign.Padding.compact` (8pt).
+    var horizontalPadding: CGFloat
 
     @Namespace private var glassNamespace
 
@@ -33,13 +35,15 @@ public struct KelyphosPanelTabBar<Tab: KelyphosPanel>: View {
         selection: Binding<Tab?>,
         position: KelyphosTabBarPosition = .top,
         selectionStyle: KelyphosTabBarSelectionStyle = .material,
-        showBorder: Bool = false
+        showBorder: Bool = false,
+        horizontalPadding: CGFloat = KelyphosDesign.Padding.compact
     ) {
         self._items = items
         self._selection = selection
         self.position = position
         self.selectionStyle = selectionStyle
         self.showBorder = showBorder
+        self.horizontalPadding = horizontalPadding
     }
 
     public var body: some View {
@@ -97,7 +101,7 @@ public struct KelyphosPanelTabBar<Tab: KelyphosPanel>: View {
                     }
                 }
             }
-            .padding(.horizontal, KelyphosDesign.Padding.compact)
+            .padding(.horizontal, horizontalPadding)
             .padding(.vertical, KelyphosDesign.Spacing.tight)
         }
     }
