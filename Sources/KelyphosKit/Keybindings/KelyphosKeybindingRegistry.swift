@@ -73,6 +73,16 @@ public final class KelyphosKeybindingRegistry {
         bindings.append(contentsOf: newBindings)
     }
 
+    /// Remove all bindings in a given category.
+    public func removeCategory(_ category: String) {
+        bindings.removeAll { $0.category == category }
+    }
+
+    /// Remove a specific binding by category and label.
+    public func remove(category: String, label: String) {
+        bindings.removeAll { $0.category == category && $0.label == label }
+    }
+
     /// All unique categories, in insertion order.
     public var categories: [String] {
         var seen = Set<String>()

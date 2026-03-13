@@ -45,13 +45,13 @@ public struct KelyphosShellView<
     @State private var navigatorSelection: NavTab?
     @State private var inspectorItems: [InspTab] = []
     @State private var inspectorSelection: InspTab?
-    @State private var keybindingRegistry = KelyphosKeybindingRegistry()
+    @State private var keybindingRegistry: KelyphosKeybindingRegistry
 
     private let appearanceObserver = AppearanceObserver()
 
     private var inspectorVisibleBinding: Binding<Bool> {
         Binding(
-            get: { state.inspectorVisible && state.inspectorEnabled },
+            get: { didAppear && state.inspectorVisible && state.inspectorEnabled },
             set: { newValue in
                 withAnimation(.easeInOut(duration: 0.15)) {
                     state.inspectorVisible = newValue
@@ -62,10 +62,12 @@ public struct KelyphosShellView<
 
     public init(
         state: KelyphosShellState,
-        configuration: KelyphosShellConfiguration<NavTab, InspTab, UtilTab, Detail>
+        configuration: KelyphosShellConfiguration<NavTab, InspTab, UtilTab, Detail>,
+        keybindingRegistry: KelyphosKeybindingRegistry? = nil
     ) {
         self.state = state
         self.configuration = configuration
+        self._keybindingRegistry = State(initialValue: keybindingRegistry ?? KelyphosKeybindingRegistry())
     }
 
     public var body: some View {
@@ -406,7 +408,13 @@ private struct ShellLifecycleModifier<
                 withTransaction(transaction) {
                     columnVisibility = state.navigatorVisible ? .all : .detailOnly
                 }
-                DispatchQueue.main.async { didAppear = true }
+                DispatchQueue.main.async {
+                    var transaction = Transaction()
+                    transaction.disablesAnimations = true
+                    withTransaction(transaction) {
+                        didAppear = true
+                    }
+                }
                 appearanceObserver.start(updating: state.colorTheme)
                 #if os(macOS)
                 applyAppearance(state.windowAppearance)
