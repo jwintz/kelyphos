@@ -407,13 +407,7 @@ private struct ShellLifecycleModifier<
                 transaction.disablesAnimations = true
                 withTransaction(transaction) {
                     columnVisibility = state.navigatorVisible ? .all : .detailOnly
-                }
-                DispatchQueue.main.async {
-                    var transaction = Transaction()
-                    transaction.disablesAnimations = true
-                    withTransaction(transaction) {
-                        didAppear = true
-                    }
+                    didAppear = true
                 }
                 appearanceObserver.start(updating: state.colorTheme)
                 #if os(macOS)
