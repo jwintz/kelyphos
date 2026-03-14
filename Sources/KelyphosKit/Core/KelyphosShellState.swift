@@ -165,6 +165,9 @@ public final class KelyphosShellState {
     /// Save navigator/inspector/utility panel visibility to UserDefaults.
     public func savePanelState() {
         let defaults = UserDefaults.standard
+        #if DEBUG
+        print("[Kelyphos] savePanelState inspector=\(inspectorVisible) navigator=\(navigatorVisible) utility=\(utilityAreaVisible) prefix=\(panelPersistencePrefix)")
+        #endif
         defaults.set(navigatorVisible, forKey: kNavigatorVisible)
         defaults.set(inspectorVisible, forKey: kInspectorVisible)
         defaults.set(utilityAreaVisible, forKey: kUtilityVisible)
@@ -181,6 +184,9 @@ public final class KelyphosShellState {
         if defaults.object(forKey: kUtilityVisible) != nil {
             self.utilityAreaVisible = defaults.bool(forKey: kUtilityVisible)
         }
+        #if DEBUG
+        print("[Kelyphos] reloadPanelState inspector=\(inspectorVisible) navigator=\(navigatorVisible) utility=\(utilityAreaVisible) prefix=\(panelPersistencePrefix)")
+        #endif
     }
 
     // MARK: - Computed

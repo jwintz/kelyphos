@@ -51,9 +51,13 @@ public struct KelyphosShellView<
 
     private var inspectorVisibleBinding: Binding<Bool> {
         Binding(
-            get: { didAppear && state.inspectorVisible && state.inspectorEnabled },
+            get: { state.inspectorVisible && state.inspectorEnabled },
             set: { newValue in
-                withAnimation(.easeInOut(duration: 0.15)) {
+                if didAppear {
+                    withAnimation(.easeInOut(duration: 0.15)) {
+                        state.inspectorVisible = newValue
+                    }
+                } else {
                     state.inspectorVisible = newValue
                 }
             }
@@ -249,21 +253,27 @@ public struct KelyphosShellView<
     private var trailingToolbarInjectedItems: some ToolbarContent {
         if configuration.trailingToolbarItems.count > 0 {
             ToolbarItem { configuration.trailingToolbarItems[0]() }
+                .sharedBackgroundVisibility(.hidden)
         }
         if configuration.trailingToolbarItems.count > 1 {
             ToolbarItem { configuration.trailingToolbarItems[1]() }
+                .sharedBackgroundVisibility(.hidden)
         }
         if configuration.trailingToolbarItems.count > 2 {
             ToolbarItem { configuration.trailingToolbarItems[2]() }
+                .sharedBackgroundVisibility(.hidden)
         }
         if configuration.trailingToolbarItems.count > 3 {
             ToolbarItem { configuration.trailingToolbarItems[3]() }
+                .sharedBackgroundVisibility(.hidden)
         }
         if configuration.trailingToolbarItems.count > 4 {
             ToolbarItem { configuration.trailingToolbarItems[4]() }
+                .sharedBackgroundVisibility(.hidden)
         }
         if configuration.trailingToolbarItems.count > 5 {
             ToolbarItem { configuration.trailingToolbarItems[5]() }
+                .sharedBackgroundVisibility(.hidden)
         }
     }
     #else
@@ -403,11 +413,17 @@ private struct ShellLifecycleModifier<
                 }
                 #endif
 
+                #if DEBUG
+                print("[Kelyphos] ShellLifecycle.onAppear inspectorVisible=\(state.inspectorVisible) navigatorVisible=\(state.navigatorVisible)")
+                #endif
                 var transaction = Transaction()
                 transaction.disablesAnimations = true
                 withTransaction(transaction) {
                     columnVisibility = state.navigatorVisible ? .all : .detailOnly
                     didAppear = true
+                    #if DEBUG
+                    print("[Kelyphos] ShellLifecycle didAppear=true (disablesAnimations)")
+                    #endif
                 }
                 appearanceObserver.start(updating: state.colorTheme)
                 #if os(macOS)
@@ -451,6 +467,11 @@ private struct ShellLifecycleModifier<
             }
             .onChange(of: state.utilityEnabled) { _, enabled in
                 if !enabled { state.utilityAreaVisible = false }
+            }
+            .onChange(of: state.inspectorVisible) { _, isVisible in
+                #if DEBUG
+                print("[Kelyphos] ShellLifecycle onChange(inspectorVisible)=\(isVisible) didAppear=\(didAppear)")
+                #endif
             }
             .onChange(of: state.navigatorVisible) { _, isVisible in
                 let target: NavigationSplitViewVisibility = isVisible ? .all : .detailOnly
