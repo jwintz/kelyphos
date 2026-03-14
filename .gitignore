@@ -1,6 +1,9 @@
 .DS_Store
 .build
 .claude
+AGENTS.md
+PLAN.md
+TODO.md
 PROMPT.md
 
 # Generated Xcode project (use `make project` to regenerate)
