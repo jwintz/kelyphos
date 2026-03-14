@@ -1,6 +1,8 @@
 # Kelyphos
 
-A cross-platform SwiftUI shell framework for building professional multi-panel applications on macOS and iPadOS. Provides an IDE-style chrome — navigator sidebar, detail content area, utility panel, and inspector — with a unified API that adapts to each platform's conventions.
+A cross-platform SwiftUI shell framework for building professional multi-panel applications on macOS and iPadOS.
+
+**[Documentation](https://jwintz.github.io/kelyphos)** Provides an IDE-style chrome — navigator sidebar, detail content area, utility panel, and inspector — with a unified API that adapts to each platform's conventions.
 
 ## Requirements
 
