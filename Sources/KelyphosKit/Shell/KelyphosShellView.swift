@@ -107,10 +107,15 @@ public struct KelyphosShellView<
 
     // MARK: - Main Content
 
+    @ViewBuilder
     private var mainContent: some View {
-        NavigationSplitView(columnVisibility: $columnVisibility) {
-            sidebarContent
-        } detail: {
+        if state.navigatorEnabled {
+            NavigationSplitView(columnVisibility: $columnVisibility) {
+                sidebarContent
+            } detail: {
+                detailContent
+            }
+        } else {
             detailContent
         }
     }
