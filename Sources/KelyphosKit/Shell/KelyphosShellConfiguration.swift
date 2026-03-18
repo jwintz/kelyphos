@@ -56,6 +56,13 @@ public struct KelyphosShellConfiguration<
     /// view in a sheet. On macOS, settings use the native `Settings` scene.
     public var settingsView: (() -> AnyView)?
 
+    // MARK: - Client Overlays
+
+    /// Client-injected overlay views rendered on top of the shell content.
+    /// Each closure returns an `AnyView` that is conditionally shown.
+    /// Use for app-specific overlays like a minibuffer bridge.
+    public var overlays: [() -> AnyView]
+
     // MARK: - Detail
 
     public var detail: () -> Detail
@@ -71,6 +78,7 @@ public struct KelyphosShellConfiguration<
         leadingToolbar: (() -> AnyView)? = nil,
         principalToolbar: (() -> AnyView)? = nil,
         trailingToolbarItems: [() -> AnyView] = [],
+        overlays: [() -> AnyView] = [],
         onToggleTabBar: (() -> Void)? = nil,
         settingsView: (() -> AnyView)? = nil,
         @ViewBuilder content: @escaping () -> Content,
@@ -83,6 +91,7 @@ public struct KelyphosShellConfiguration<
         self.leadingToolbar = leadingToolbar
         self.principalToolbar = principalToolbar
         self.trailingToolbarItems = trailingToolbarItems
+        self.overlays = overlays
         self.onToggleTabBar = onToggleTabBar
         self.settingsView = settingsView
         self.content = content
@@ -103,6 +112,7 @@ extension KelyphosShellConfiguration where Content == EmptyView {
         leadingToolbar: (() -> AnyView)? = nil,
         principalToolbar: (() -> AnyView)? = nil,
         trailingToolbarItems: [() -> AnyView] = [],
+        overlays: [() -> AnyView] = [],
         onToggleTabBar: (() -> Void)? = nil,
         settingsView: (() -> AnyView)? = nil,
         @ViewBuilder detail: @escaping () -> Detail
@@ -114,6 +124,7 @@ extension KelyphosShellConfiguration where Content == EmptyView {
         self.leadingToolbar = leadingToolbar
         self.principalToolbar = principalToolbar
         self.trailingToolbarItems = trailingToolbarItems
+        self.overlays = overlays
         self.onToggleTabBar = onToggleTabBar
         self.settingsView = settingsView
         self.content = nil

@@ -103,6 +103,7 @@ public struct KelyphosShellView<
             ))
             .overlay { keybindingsOverlay }
             .overlay { commandPaletteOverlay }
+            .overlay { clientOverlays }
             .environment(\.kelyphosShellState, state)
             .environment(\.kelyphosKeybindingRegistry, keybindingRegistry)
             .environment(\.kelyphosCommandPaletteRegistry, commandPaletteRegistry)
@@ -406,6 +407,15 @@ public struct KelyphosShellView<
     private var commandPaletteOverlay: some View {
         if state.showCommandPalette {
             KelyphosCommandPaletteView(isPresented: $state.showCommandPalette)
+        }
+    }
+
+    // MARK: - Client Overlays
+
+    @ViewBuilder
+    private var clientOverlays: some View {
+        ForEach(0..<configuration.overlays.count, id: \.self) { i in
+            configuration.overlays[i]()
         }
     }
 }
