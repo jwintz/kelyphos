@@ -65,6 +65,19 @@ public struct KelyphosCommands: Commands {
                 utilTab(7); utilTab(8); utilTab(9)
             }
 
+            Divider()
+
+            // Command Palette
+            Section {
+                Button("Command Palette") {
+                    guard let state else { return }
+                    withAnimation(.easeInOut(duration: 0.15)) {
+                        state.showCommandPalette.toggle()
+                    }
+                }
+                .keyboardShortcut("p", modifiers: [.command, .shift])
+            }
+
         }
 
         // P27: Remove Help menu entirely so CMD+SHIFT+/ doesn't get intercepted.

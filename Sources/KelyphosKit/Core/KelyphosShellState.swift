@@ -87,6 +87,10 @@ public final class KelyphosShellState {
 
     public var showKeybindingsOverlay: Bool = false
 
+    // MARK: - Command Palette
+
+    public var showCommandPalette: Bool = false
+
     // MARK: - Persistence Keys
 
     private var kAlpha: String { "\(persistencePrefix).appearance.alpha" }

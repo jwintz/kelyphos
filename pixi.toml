@@ -22,7 +22,9 @@ build-if-needed = { cmd = "bash -c 'BUILT=$(xcodebuild -project Kelyphos.xcodepr
 test = { cmd = "xcodebuild -project Kelyphos.xcodeproj -scheme KelyphosDemo -configuration Debug test -allowProvisioningUpdates -destination 'platform=macOS'", depends-on = ["generate-if-needed"], env = { SDKROOT = "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk" } }
 
 # Build if needed, launch app.
-run = { cmd = "bash -c 'BUILT=$(xcodebuild -project Kelyphos.xcodeproj -scheme KelyphosDemo -configuration Debug -showBuildSettings 2>/dev/null | grep \" BUILT_PRODUCTS_DIR = \" | sed \"s/.*= //\" | head -n 1); open -W \"$BUILT/KelyphosDemo.app\"'", depends-on = ["build-if-needed"], env = { SDKROOT = "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk" } }
+# Note: uses open -a with the bundle path instead of open -W because
+# -W cannot track sandboxed app PIDs (GetProcessPID fails).
+run = { cmd = "bash -c 'BUILT=$(xcodebuild -project Kelyphos.xcodeproj -scheme KelyphosDemo -configuration Debug -showBuildSettings 2>/dev/null | grep \" BUILT_PRODUCTS_DIR = \" | sed \"s/.*= //\" | head -n 1); open \"$BUILT/KelyphosDemo.app\"'", depends-on = ["build-if-needed"], env = { SDKROOT = "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk" } }
 
 # Remove all build artifacts, derived data, and generated project for a pristine rebuild.
 distclean = "rm -rf .build Kelyphos.xcodeproj DerivedData build && xcodebuild -alltargets clean 2>/dev/null; echo 'distclean complete'"

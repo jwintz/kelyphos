@@ -58,6 +58,7 @@ public final class KelyphosKeybindingRegistry {
         register(category: "Utility", label: "Utility Tab 7", shortcut: "⌘⌥⇧7")
         register(category: "Utility", label: "Utility Tab 8", shortcut: "⌘⌥⇧8")
         register(category: "Utility", label: "Utility Tab 9", shortcut: "⌘⌥⇧9")
+        register(category: "Shell", label: "Command Palette", shortcut: "⇧⌘P")
         register(category: "Shell", label: "Keyboard Shortcuts", shortcut: "⇧⌘/")
         register(category: "Shell", label: "Settings", shortcut: "⌘,")
     }

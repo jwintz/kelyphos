@@ -30,10 +30,11 @@ public struct KelyphosShellView<
     NavTab: KelyphosPanel,
     InspTab: KelyphosPanel,
     UtilTab: KelyphosPanel,
+    Content: View,
     Detail: View
 >: View {
     @Bindable var state: KelyphosShellState
-    let configuration: KelyphosShellConfiguration<NavTab, InspTab, UtilTab, Detail>
+    let configuration: KelyphosShellConfiguration<NavTab, InspTab, UtilTab, Content, Detail>
 
     @State private var columnVisibility: NavigationSplitViewVisibility = .detailOnly
     @State private var didAppear = false
@@ -46,6 +47,7 @@ public struct KelyphosShellView<
     @State private var inspectorItems: [InspTab] = []
     @State private var inspectorSelection: InspTab?
     @State private var keybindingRegistry: KelyphosKeybindingRegistry
+    @State private var commandPaletteRegistry: KelyphosCommandPaletteRegistry
 
     private let appearanceObserver = AppearanceObserver()
 
@@ -66,12 +68,14 @@ public struct KelyphosShellView<
 
     public init(
         state: KelyphosShellState,
-        configuration: KelyphosShellConfiguration<NavTab, InspTab, UtilTab, Detail>,
-        keybindingRegistry: KelyphosKeybindingRegistry? = nil
+        configuration: KelyphosShellConfiguration<NavTab, InspTab, UtilTab, Content, Detail>,
+        keybindingRegistry: KelyphosKeybindingRegistry? = nil,
+        commandPaletteRegistry: KelyphosCommandPaletteRegistry? = nil
     ) {
         self.state = state
         self.configuration = configuration
         self._keybindingRegistry = State(initialValue: keybindingRegistry ?? KelyphosKeybindingRegistry())
+        self._commandPaletteRegistry = State(initialValue: commandPaletteRegistry ?? KelyphosCommandPaletteRegistry())
     }
 
     public var body: some View {
@@ -98,8 +102,10 @@ public struct KelyphosShellView<
                 horizontalSizeClass: horizontalSizeClass
             ))
             .overlay { keybindingsOverlay }
+            .overlay { commandPaletteOverlay }
             .environment(\.kelyphosShellState, state)
             .environment(\.kelyphosKeybindingRegistry, keybindingRegistry)
+            .environment(\.kelyphosCommandPaletteRegistry, commandPaletteRegistry)
             #if os(macOS)
             .focusedSceneValue(\.kelyphosShellState, state)
             #endif
@@ -110,8 +116,29 @@ public struct KelyphosShellView<
     @ViewBuilder
     private var mainContent: some View {
         if state.navigatorEnabled {
+            if let contentBuilder = configuration.content {
+                // Three-column: Navigator | Content | Detail
+                NavigationSplitView(columnVisibility: $columnVisibility) {
+                    sidebarContent
+                } content: {
+                    contentBuilder()
+                        .navigationSplitViewColumnWidth(ideal: KelyphosDesign.Width.contentIdeal)
+                } detail: {
+                    detailContent
+                }
+            } else {
+                // Two-column: Navigator | Detail
+                NavigationSplitView(columnVisibility: $columnVisibility) {
+                    sidebarContent
+                } detail: {
+                    detailContent
+                }
+            }
+        } else if let contentBuilder = configuration.content {
+            // No navigator, but content column present: Content | Detail
             NavigationSplitView(columnVisibility: $columnVisibility) {
-                sidebarContent
+                contentBuilder()
+                    .navigationSplitViewColumnWidth(ideal: KelyphosDesign.Width.contentIdeal)
             } detail: {
                 detailContent
             }
@@ -372,6 +399,15 @@ public struct KelyphosShellView<
             KelyphosKeybindingsOverlay(isPresented: $state.showKeybindingsOverlay)
         }
     }
+
+    // MARK: - Command Palette Overlay
+
+    @ViewBuilder
+    private var commandPaletteOverlay: some View {
+        if state.showCommandPalette {
+            KelyphosCommandPaletteView(isPresented: $state.showCommandPalette)
+        }
+    }
 }
 
 // MARK: - Lifecycle Modifier
@@ -380,6 +416,7 @@ private struct ShellLifecycleModifier<
     NavTab: KelyphosPanel,
     InspTab: KelyphosPanel,
     UtilTab: KelyphosPanel,
+    ContentCol: View,
     Detail: View
 >: ViewModifier {
     @Bindable var state: KelyphosShellState
@@ -389,7 +426,7 @@ private struct ShellLifecycleModifier<
     @Binding var navigatorSelection: NavTab?
     @Binding var inspectorItems: [InspTab]
     @Binding var inspectorSelection: InspTab?
-    let configuration: KelyphosShellConfiguration<NavTab, InspTab, UtilTab, Detail>
+    let configuration: KelyphosShellConfiguration<NavTab, InspTab, UtilTab, ContentCol, Detail>
     let appearanceObserver: AppearanceObserver
     var horizontalSizeClass: UserInterfaceSizeClass?
 
@@ -539,6 +576,14 @@ private struct ShellLifecycleModifier<
             if isSlashKey && isCmdShift {
                 withAnimation(.easeInOut(duration: 0.15)) {
                     state.showKeybindingsOverlay.toggle()
+                }
+                return nil
+            }
+
+            // keyCode 35 = "P" on US keyboard; CMD+SHIFT+P → command palette
+            if keyCode == 35 && isCmdShift {
+                withAnimation(.easeInOut(duration: 0.15)) {
+                    state.showCommandPalette.toggle()
                 }
                 return nil
             }

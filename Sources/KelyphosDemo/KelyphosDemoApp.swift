@@ -68,6 +68,7 @@ struct KelyphosDemoApp: App {
 
     var body: some Scene {
         mainWindowGroup
+        threeColumnWindowGroup
 
         #if os(macOS)
         settingsScene
@@ -88,8 +89,21 @@ struct KelyphosDemoApp: App {
                     openWindow(id: "about")
                 }
             }
+            CommandGroup(after: .newItem) {
+                Button("Three-Column Demo") {
+                    openWindow(id: "three-column")
+                }
+                .keyboardShortcut("t", modifiers: [.command, .shift])
+            }
             #endif
         }
+    }
+
+    private var threeColumnWindowGroup: some Scene {
+        WindowGroup("Kelyphos Mail", id: "three-column") {
+            ThreeColumnDemoSceneView()
+        }
+        .commands { KelyphosCommands() }
     }
 
     #if os(macOS)
@@ -157,6 +171,7 @@ struct KelyphosDemoApp: App {
 private struct DemoSceneView: View {
     @State private var shellState = KelyphosShellState(persistencePrefix: "kelyphos.demo")
     @State private var showcaseState = ShowcaseState()
+    @State private var commandPaletteRegistry = KelyphosCommandPaletteRegistry()
     @Environment(\.openWindow) private var openWindow
     #if os(macOS)
     @AppStorage("kelyphos.demo.showWelcomeOnStartup") private var showWelcomeOnStartup = true
@@ -170,12 +185,15 @@ private struct DemoSceneView: View {
                 inspectorTabs: DemoInspectorTab.allCases.map { $0 },
                 utilityTabs: DemoUtilityTab.allCases.map { $0 },
                 detail: { DemoContentView() }
-            )
+            ),
+            commandPaletteRegistry: commandPaletteRegistry
         )
         .environment(\.showcaseState, showcaseState)
         .onAppear {
             shellState.title = "Kelyphos Demo"
             shellState.subtitle = "HIG Showcase"
+
+            registerDemoCommands()
 
             #if os(macOS)
             if showWelcomeOnStartup {
@@ -188,6 +206,53 @@ private struct DemoSceneView: View {
         }
         .onChange(of: showcaseState.selectedItem) { _, newItem in
             shellState.subtitle = newItem?.title ?? "HIG Showcase"
+        }
+    }
+
+    private func registerDemoCommands() {
+        // Shell commands
+        commandPaletteRegistry.register([
+            KelyphosCommand(id: "shell.toggle-navigator", title: "Toggle Navigator", systemImage: "sidebar.left") { [shellState] in
+                withAnimation(.easeInOut(duration: 0.15)) {
+                    shellState.navigatorVisible.toggle()
+                }
+            },
+            KelyphosCommand(id: "shell.toggle-inspector", title: "Toggle Inspector", systemImage: "sidebar.right") { [shellState] in
+                withAnimation(.easeInOut(duration: 0.15)) {
+                    shellState.inspectorVisible.toggle()
+                }
+            },
+            KelyphosCommand(id: "shell.toggle-utility", title: "Toggle Utility Area", systemImage: "rectangle.bottomthird.inset.filled") { [shellState] in
+                withAnimation(.easeInOut(duration: 0.15)) {
+                    shellState.utilityAreaVisible.toggle()
+                }
+            },
+            KelyphosCommand(id: "shell.keyboard-shortcuts", title: "Keyboard Shortcuts", systemImage: "keyboard") { [shellState] in
+                withAnimation(.easeInOut(duration: 0.15)) {
+                    shellState.showKeybindingsOverlay = true
+                }
+            },
+        ])
+
+        let openWindowAction = openWindow
+        commandPaletteRegistry.register(
+            KelyphosCommand(id: "demo.three-column", title: "Open Three-Column Demo", subtitle: "Mail-like layout", systemImage: "rectangle.split.3x1") {
+                openWindowAction(id: "three-column")
+            }
+        )
+
+        // Navigation commands for each showcase page
+        for item in ShowcaseCatalog.allItems {
+            commandPaletteRegistry.register(
+                KelyphosCommand(
+                    id: "go.\(item.id)",
+                    title: "Go to \(item.title)",
+                    subtitle: item.section.title,
+                    systemImage: item.systemImage
+                ) { [showcaseState] in
+                    showcaseState.selectedItem = item
+                }
+            )
         }
     }
 }
