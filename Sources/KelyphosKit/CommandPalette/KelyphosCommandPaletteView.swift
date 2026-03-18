@@ -20,16 +20,8 @@ public struct KelyphosCommandPaletteView: View {
     }
 
     public var body: some View {
-        ZStack {
-            // Dimmed background — tapping dismisses
-            Color.black.opacity(0.4)
-                .ignoresSafeArea()
-                .onTapGesture { dismiss() }
-
-            // Glass panel
-            palettePanel
-        }
-        .transition(.opacity.combined(with: .scale(scale: 0.95)))
+        palettePanel
+            .transition(.opacity.combined(with: .scale(scale: 0.95)))
         .focusable()
         .onKeyPress(.escape) {
             dismiss()
@@ -74,7 +66,9 @@ public struct KelyphosCommandPaletteView: View {
                 .textFieldStyle(.plain)
                 .font(.system(size: KelyphosDesign.FontSize.large))
                 .focused($isSearchFocused)
-                .onAppear { isSearchFocused = true }
+                .onAppear {
+                    DispatchQueue.main.async { isSearchFocused = true }
+                }
                 .onChange(of: query) { _, _ in
                     selectedIndex = 0
                 }

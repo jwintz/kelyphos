@@ -7,6 +7,7 @@ import SwiftUI
 public struct KelyphosKeybindingsOverlay: View {
     @Binding var isPresented: Bool
     @State private var searchText = ""
+    @FocusState private var isSearchFocused: Bool
     @Environment(\.kelyphosKeybindingRegistry) private var registry
 
     public init(isPresented: Binding<Bool>) {
@@ -14,21 +15,13 @@ public struct KelyphosKeybindingsOverlay: View {
     }
 
     public var body: some View {
-        ZStack {
-            // Dimmed background — tapping dismisses
-            Color.black.opacity(0.4)
-                .ignoresSafeArea()
-                .onTapGesture { isPresented = false }
-
-            // Glass panel
-            overlayPanel
-        }
-        .transition(.opacity.combined(with: .scale(scale: 0.95)))
-        .focusable()
-        .onKeyPress(.escape) {
-            isPresented = false
-            return .handled
-        }
+        overlayPanel
+            .transition(.opacity.combined(with: .scale(scale: 0.95)))
+            .focusable()
+            .onKeyPress(.escape) {
+                isPresented = false
+                return .handled
+            }
     }
 
     private var overlayPanel: some View {
@@ -66,6 +59,10 @@ public struct KelyphosKeybindingsOverlay: View {
                 .foregroundStyle(.tertiary)
             TextField("Search shortcuts…", text: $searchText)
                 .textFieldStyle(.plain)
+                .focused($isSearchFocused)
+                .onAppear {
+                    DispatchQueue.main.async { isSearchFocused = true }
+                }
         }
         .padding(.horizontal, 10)
         .padding(.vertical, 6)
