@@ -105,6 +105,7 @@ public final class KelyphosShellState {
     private var kUtilityVisible: String { "\(panelPersistencePrefix).panel.utilityVisible" }
 
     @ObservationIgnored nonisolated(unsafe) private var appearanceObserver: NSObjectProtocol?
+    @ObservationIgnored private var appearanceSaveWorkItem: DispatchWorkItem?
 
     // MARK: - Init
 
@@ -149,11 +150,16 @@ public final class KelyphosShellState {
     // MARK: - Persistence
 
     public func saveAppearance() {
-        let defaults = UserDefaults.standard
-        defaults.set(backgroundAlpha, forKey: kAlpha)
-        defaults.set(vibrancyMaterial.rawValue, forKey: kMaterial)
-        defaults.set(windowAppearance, forKey: kAppearance)
-        NotificationCenter.default.post(name: .kelyphosAppearanceDidChange, object: persistencePrefix)
+        appearanceSaveWorkItem?.cancel()
+        appearanceSaveWorkItem = DispatchWorkItem { [weak self] in
+            guard let self else { return }
+            let defaults = UserDefaults.standard
+            defaults.set(self.backgroundAlpha, forKey: self.kAlpha)
+            defaults.set(self.vibrancyMaterial.rawValue, forKey: self.kMaterial)
+            defaults.set(self.windowAppearance, forKey: self.kAppearance)
+            NotificationCenter.default.post(name: .kelyphosAppearanceDidChange, object: self.persistencePrefix)
+        }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3, execute: appearanceSaveWorkItem!)
     }
 
     private func reloadAppearance() {

@@ -8,6 +8,7 @@ public struct KelyphosCommandPaletteView: View {
     @Binding var isPresented: Bool
     @State private var query = ""
     @State private var selectedIndex = 0
+    @State private var cachedResults: [(command: KelyphosCommand, match: KelyphosFuzzyMatch)] = []
     @FocusState private var isSearchFocused: Bool
     @Environment(\.kelyphosCommandPaletteRegistry) private var registry
 
@@ -15,14 +16,15 @@ public struct KelyphosCommandPaletteView: View {
         self._isPresented = isPresented
     }
 
-    private var results: [(command: KelyphosCommand, match: KelyphosFuzzyMatch)] {
-        registry.search(query)
-    }
-
     public var body: some View {
         palettePanel
             .transition(.opacity.combined(with: .scale(scale: 0.95)))
         .focusable()
+        .onAppear { cachedResults = registry.search(query) }
+        .onChange(of: query) { _, newQuery in
+            selectedIndex = 0
+            cachedResults = registry.search(newQuery)
+        }
         .onKeyPress(.escape) {
             dismiss()
             return .handled
@@ -47,11 +49,11 @@ public struct KelyphosCommandPaletteView: View {
         VStack(spacing: 0) {
             searchField
             Divider()
-            resultsList
+            cachedResultsList
         }
         .frame(width: 500, height: 400)
         .glassEffect(in: .rect(cornerRadius: KelyphosDesign.CornerRadius.glass))
-        .shadow(color: .black.opacity(0.3), radius: 20, y: 10)
+        .shadow(color: .black.opacity(0.3), radius: 8, y: 6)
     }
 
     // MARK: - Search Field
@@ -68,9 +70,6 @@ public struct KelyphosCommandPaletteView: View {
                 .focused($isSearchFocused)
                 .onAppear {
                     DispatchQueue.main.async { isSearchFocused = true }
-                }
-                .onChange(of: query) { _, _ in
-                    selectedIndex = 0
                 }
 
             if !query.isEmpty {
@@ -89,8 +88,8 @@ public struct KelyphosCommandPaletteView: View {
 
     // MARK: - Results List
 
-    private var resultsList: some View {
-        let items = results
+    private var cachedResultsList: some View {
+        let items = cachedResults
         return ScrollViewReader { proxy in
             ScrollView {
                 LazyVStack(spacing: 0) {
@@ -119,7 +118,7 @@ public struct KelyphosCommandPaletteView: View {
                 .padding(.vertical, 4)
             }
             .onChange(of: selectedIndex) { _, newIndex in
-                let items = results
+                let items = cachedResults
                 if newIndex >= 0 && newIndex < items.count {
                     withAnimation(.easeOut(duration: 0.08)) {
                         proxy.scrollTo(items[newIndex].command.id, anchor: .center)
@@ -138,13 +137,13 @@ public struct KelyphosCommandPaletteView: View {
     }
 
     private func moveSelection(_ delta: Int) {
-        let count = results.count
+        let count = cachedResults.count
         guard count > 0 else { return }
         selectedIndex = max(0, min(count - 1, selectedIndex + delta))
     }
 
     private func confirmSelection() {
-        let items = results
+        let items = cachedResults
         guard selectedIndex >= 0 && selectedIndex < items.count else { return }
         let command = items[selectedIndex].command
         dismiss()
@@ -154,10 +153,16 @@ public struct KelyphosCommandPaletteView: View {
 
 // MARK: - Command Row
 
-private struct CommandRow: View {
+private struct CommandRow: View, Equatable {
     let command: KelyphosCommand
     let match: KelyphosFuzzyMatch
     let isSelected: Bool
+
+    nonisolated static func == (lhs: CommandRow, rhs: CommandRow) -> Bool {
+        lhs.command.id == rhs.command.id
+            && lhs.isSelected == rhs.isSelected
+            && lhs.match.score == rhs.match.score
+    }
 
     var body: some View {
         HStack(spacing: 10) {

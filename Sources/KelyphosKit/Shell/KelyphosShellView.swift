@@ -195,6 +195,7 @@ public struct KelyphosShellView<
                             }
                             .clipShape(UnevenRoundedRectangle(topLeadingRadius: KelyphosDesign.CornerRadius.glass, bottomLeadingRadius: KelyphosDesign.CornerRadius.glass))
                         }
+                        .compositingGroup()
                         .shadow(color: .black.opacity(0.15), radius: 8, x: -2)
                         .transition(.move(edge: .trailing))
                 }

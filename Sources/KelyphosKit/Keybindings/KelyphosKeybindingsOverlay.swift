@@ -33,7 +33,7 @@ public struct KelyphosKeybindingsOverlay: View {
         }
         .frame(width: 640, height: 480)
         .glassEffect(in: .rect(cornerRadius: KelyphosDesign.CornerRadius.glass))
-        .shadow(color: .black.opacity(0.3), radius: 20, y: 10)
+        .shadow(color: .black.opacity(0.3), radius: 8, y: 6)
     }
 
     private var overlayHeader: some View {
@@ -72,9 +72,7 @@ public struct KelyphosKeybindingsOverlay: View {
     }
 
     private var overlayContent: some View {
-        let filtered = registry.search(searchText)
-        let grouped = groupByCategory(filtered)
-        // Split categories into two columns
+        let grouped = groupByCategory(registry.search(searchText))
         let (left, right) = splitColumns(grouped)
 
         return ScrollView {
@@ -116,15 +114,18 @@ public struct KelyphosKeybindingsOverlay: View {
     }
 
     private func groupByCategory(_ bindings: [KelyphosKeybinding]) -> [(String, [KelyphosKeybinding])] {
+        let grouped = Dictionary(grouping: bindings, by: \.category)
+        // Preserve category order of first appearance
         var seen = Set<String>()
-        var result: [(String, [KelyphosKeybinding])] = []
+        var order: [String] = []
         for binding in bindings {
             if seen.insert(binding.category).inserted {
-                let group = bindings.filter { $0.category == binding.category }
-                result.append((binding.category, group))
+                order.append(binding.category)
             }
         }
-        return result
+        return order.compactMap { cat in
+            grouped[cat].map { (cat, $0) }
+        }
     }
 
     /// Split categories into two balanced columns by item count.

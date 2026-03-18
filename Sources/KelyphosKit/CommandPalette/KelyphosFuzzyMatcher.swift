@@ -25,11 +25,15 @@ public enum KelyphosFuzzyMatcher {
 
         let candidateLower = candidate.lowercased()
         let queryLower = query.lowercased()
+        // Convert query to Array for O(1) indexed access (avoids O(n) String.index(offsetBy:))
+        let queryChars = Array(query)
 
         var matchedIndices: [String.Index] = []
+        matchedIndices.reserveCapacity(queryLower.count)
         var score = 0
         var searchStart = candidateLower.startIndex
         var previousMatchIndex: String.Index?
+        var queryCharIndex = 0
 
         for qChar in queryLower {
             guard let range = candidateLower[searchStart...].range(of: String(qChar)) else {
@@ -55,10 +59,9 @@ public enum KelyphosFuzzyMatcher {
                 }
             }
 
-            // Case-exact bonus
+            // Case-exact bonus (O(1) via Array index)
             let candidateOrigChar = candidate[matchIndex]
-            let queryOrigIdx = query.index(query.startIndex, offsetBy: matchedIndices.count - 1)
-            if candidateOrigChar == query[queryOrigIdx] {
+            if candidateOrigChar == queryChars[queryCharIndex] {
                 score += 1
             }
 
@@ -67,6 +70,7 @@ public enum KelyphosFuzzyMatcher {
 
             previousMatchIndex = matchIndex
             searchStart = candidateLower.index(after: matchIndex)
+            queryCharIndex += 1
         }
 
         // Penalty for unmatched tail length (prefer shorter candidates)
