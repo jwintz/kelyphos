@@ -10,7 +10,7 @@ title: Kelyphos
 description: A SwiftUI shell framework for building professional multi-panel applications on macOS and iPadOS. IDE-style chrome — navigator, editor, inspector, utility — with a unified API that adapts to each platform's conventions.
 links:
   - label: Get Started
-    to: /guide/installation
+    to: /home
     icon: i-lucide-arrow-right
     color: neutral
     size: xl
