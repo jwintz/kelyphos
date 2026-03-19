@@ -5,8 +5,6 @@ import KelyphosKit
 
 #if os(macOS)
 import AppKit
-import WelcomeWindow
-import AboutWindow
 
 /// Helper class that holds an observer token and can invalidate itself.
 /// Used to intercept the main window during launch and auto-remove after first fire.
@@ -44,6 +42,7 @@ struct KelyphosDemoApp: App {
     /// Dedicated shell state for the Settings panel (appearance prefs).
     /// Each scene owns its own shellState; this one is only used by KelyphosSettingsView.
     @State private var settingsShellState = KelyphosShellState(persistencePrefix: "kelyphos.demo")
+    @State private var welcomeShellState = KelyphosShellState(persistencePrefix: "kelyphos.demo")
     @Environment(\.openWindow) private var openWindow
 
     #if os(macOS)
@@ -119,47 +118,62 @@ struct KelyphosDemoApp: App {
     }
 
     private var welcomeScene: some Scene {
-        WelcomeWindow(
-            title: "Kelyphos",
-            subtitleView: { WelcomeStartupToggle() }
-        ) { dismiss in
-            WelcomeButton(
-                iconName: "play.circle",
-                title: "Continue",
-                action: {
-                    Self.showMainWindow()
-                    dismiss()
-                }
+        Window("Welcome to Kelyphos", id: "welcome") {
+            KelyphosWelcomeView(
+                title: "Kelyphos",
+                state: welcomeShellState,
+                actions: [
+                    KelyphosWelcomeAction(systemImage: "play.circle", title: "Continue") {
+                        Self.showMainWindow()
+                        Self.dismissWelcome()
+                    },
+                    KelyphosWelcomeAction(systemImage: "plus.square", title: "New Project") {
+                        Self.showMainWindow()
+                        Self.dismissWelcome()
+                    },
+                    KelyphosWelcomeAction(systemImage: "folder", title: "Open Project") {
+                        Self.showMainWindow()
+                        Self.dismissWelcome()
+                    },
+                ],
+                footer: { WelcomeStartupToggle() }
             )
-            WelcomeButton(
-                iconName: "plus.square",
-                title: "New Project",
-                action: {
-                    Self.showMainWindow()
-                    dismiss()
+            .task {
+                if let window = NSApp.windows.first(where: { $0.title == "Welcome to Kelyphos" }) {
+                    window.standardWindowButton(.closeButton)?.isHidden = true
+                    window.standardWindowButton(.miniaturizeButton)?.isHidden = true
+                    window.standardWindowButton(.zoomButton)?.isHidden = true
+                    window.backgroundColor = .clear
+                    window.isMovableByWindowBackground = true
                 }
-            )
-            WelcomeButton(
-                iconName: "folder",
-                title: "Open Project",
-                action: {
-                    Self.showMainWindow()
-                    dismiss()
-                }
-            )
+            }
+        }
+        .windowStyle(.hiddenTitleBar)
+        .windowResizability(.contentSize)
+    }
+
+    @MainActor
+    private static func dismissWelcome() {
+        for window in NSApp.windows where window.title == "Welcome to Kelyphos" {
+            window.close()
+            return
         }
     }
 
     private var aboutScene: some Scene {
-        AboutWindow(title: "Kelyphos") {
-            AboutButton(title: "Acknowledgements") {
-                VStack(alignment: .leading, spacing: 12) {
-                    Link("CodeEditApp/WelcomeWindow", destination: URL(string: "https://github.com/CodeEditApp/WelcomeWindow")!)
-                    Link("CodeEditApp/AboutWindow", destination: URL(string: "https://github.com/CodeEditApp/AboutWindow")!)
+        Window("About Kelyphos", id: "about") {
+            KelyphosAboutView(title: "Kelyphos")
+                .task {
+                    if let window = NSApp.windows.first(where: { $0.title == "About Kelyphos" }) {
+                        window.standardWindowButton(.zoomButton)?.isHidden = true
+                        window.standardWindowButton(.miniaturizeButton)?.isHidden = true
+                        window.backgroundColor = .clear
+                        window.isMovableByWindowBackground = true
+                    }
                 }
-                .padding()
-            }
         }
+        .windowStyle(.hiddenTitleBar)
+        .windowResizability(.contentSize)
     }
     #endif
 }
