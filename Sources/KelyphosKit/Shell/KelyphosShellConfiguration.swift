@@ -44,6 +44,12 @@ public struct KelyphosShellConfiguration<
     /// Defaults to `NSApp.keyWindow?.toggleTabBar(nil)` when nil.
     public var onToggleTabBar: (() -> Void)?
 
+    // MARK: - Title Menu
+
+    /// When non-nil, adds a menu to the toolbar title area (clicking the title/subtitle).
+    /// Use for vault-switching, document context menus, etc.
+    public var titleMenu: (() -> AnyView)?
+
     // MARK: - Detail Scroll
 
     /// When `true` (default), the detail content is wrapped in a `ScrollView`.
@@ -80,6 +86,7 @@ public struct KelyphosShellConfiguration<
         trailingToolbarItems: [() -> AnyView] = [],
         overlays: [() -> AnyView] = [],
         onToggleTabBar: (() -> Void)? = nil,
+        titleMenu: (() -> AnyView)? = nil,
         settingsView: (() -> AnyView)? = nil,
         @ViewBuilder content: @escaping () -> Content,
         @ViewBuilder detail: @escaping () -> Detail
@@ -93,6 +100,7 @@ public struct KelyphosShellConfiguration<
         self.trailingToolbarItems = trailingToolbarItems
         self.overlays = overlays
         self.onToggleTabBar = onToggleTabBar
+        self.titleMenu = titleMenu
         self.settingsView = settingsView
         self.content = content
         self.detail = detail
@@ -114,6 +122,7 @@ extension KelyphosShellConfiguration where Content == EmptyView {
         trailingToolbarItems: [() -> AnyView] = [],
         overlays: [() -> AnyView] = [],
         onToggleTabBar: (() -> Void)? = nil,
+        titleMenu: (() -> AnyView)? = nil,
         settingsView: (() -> AnyView)? = nil,
         @ViewBuilder detail: @escaping () -> Detail
     ) {
@@ -126,6 +135,7 @@ extension KelyphosShellConfiguration where Content == EmptyView {
         self.trailingToolbarItems = trailingToolbarItems
         self.overlays = overlays
         self.onToggleTabBar = onToggleTabBar
+        self.titleMenu = titleMenu
         self.settingsView = settingsView
         self.content = nil
         self.detail = detail

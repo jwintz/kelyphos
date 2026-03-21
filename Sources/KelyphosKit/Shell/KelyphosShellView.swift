@@ -85,6 +85,11 @@ public struct KelyphosShellView<
             .navigationTitle(state.title)
             .navigationSubtitle(state.subtitle)
             .toolbarTitleDisplayMode(.inline)
+            .toolbarTitleMenu {
+                if let titleMenu = configuration.titleMenu {
+                    titleMenu()
+                }
+            }
             #endif
             .background { vibrancyBackground }
             .onPreferenceChange(NavigatorWidthKey.self) { state.navigatorWidth = $0 }
