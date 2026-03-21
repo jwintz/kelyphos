@@ -172,9 +172,11 @@ public struct KelyphosWelcomeView<FooterContent: View, RecentsContent: View>: Vi
     // MARK: - Right Panel
 
     private var rightPanel: some View {
-        ZStack {
+        ZStack(alignment: .topLeading) {
             rightBackground
             recents()
+                .padding(.vertical, 8)
+                .padding(.horizontal, 6)
         }
         .frame(width: 280)
     }

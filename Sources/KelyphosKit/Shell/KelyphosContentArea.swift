@@ -20,6 +20,7 @@ public struct KelyphosContentArea<
 
     @State private var utilityItems: [UtilTab] = []
     @State private var utilitySelection: UtilTab?
+    @State private var isDraggingResize = false
 
     public init(
         state: KelyphosShellState,
@@ -33,54 +34,61 @@ public struct KelyphosContentArea<
         self.detail = detail
     }
 
-    public var body: some View {
-        VStack(spacing: 0) {
-            // Main content — scrollable or fixed depending on configuration
-            if scrollable {
-                ScrollView {
-                    detail()
-                        .frame(maxWidth: .infinity)
-                }
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
-            } else {
-                detail()
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-            }
+    private var utilityVisible: Bool {
+        state.utilityAreaVisible && state.utilityEnabled && !utilityTabs.isEmpty
+    }
 
-            // Utility area (collapsible) — fixed height at the bottom
-            // P21b: 8pt margins outside, no padding inside, rounded top corners
-            if state.utilityAreaVisible && state.utilityEnabled && !utilityTabs.isEmpty {
-                KelyphosPanelContainer(
-                    items: $utilityItems,
-                    selection: $utilitySelection,
-                    position: .top,
-                    selectionStyle: .opaque,
-                    showBorder: true,
-                    tabBarHorizontalPadding: 4
-                )
-                .frame(height: state.utilityAreaHeight)
-                #if !os(macOS)
-                .dynamicTypeSize(.xSmall ... .medium)
-                #endif
-                .scrollContentBackground(.hidden)
-                #if os(macOS)
-                .clipShape(UnevenRoundedRectangle(
-                    topLeadingRadius: KelyphosDesign.CornerRadius.glass,
-                    bottomLeadingRadius: 0,
-                    bottomTrailingRadius: 0,
-                    topTrailingRadius: KelyphosDesign.CornerRadius.glass
-                ))
-                .glassEffect(in: UnevenRoundedRectangle(
-                    topLeadingRadius: KelyphosDesign.CornerRadius.glass,
-                    bottomLeadingRadius: 0,
-                    bottomTrailingRadius: 0,
-                    topTrailingRadius: KelyphosDesign.CornerRadius.glass
-                ))
-                #else
-                .clipShape(.rect(cornerRadius: KelyphosDesign.CornerRadius.glass))
-                .glassEffect(in: .rect(cornerRadius: KelyphosDesign.CornerRadius.glass))
-                #endif
-                .padding(.horizontal, KelyphosDesign.Padding.compact)
+    public var body: some View {
+        GeometryReader { geometry in
+            VStack(spacing: 0) {
+                // Main content — scrollable or fixed depending on configuration
+                if scrollable {
+                    ScrollView {
+                        detail()
+                            .frame(maxWidth: .infinity)
+                    }
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                } else {
+                    detail()
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                }
+
+                // Resize handle between detail and utility
+                if utilityVisible {
+                    resizeHandle(containerHeight: geometry.size.height)
+
+                    KelyphosPanelContainer(
+                        items: $utilityItems,
+                        selection: $utilitySelection,
+                        position: .top,
+                        selectionStyle: .opaque,
+                        showBorder: true,
+                        tabBarHorizontalPadding: 4
+                    )
+                    .frame(height: state.utilityAreaHeight)
+                    #if !os(macOS)
+                    .dynamicTypeSize(.xSmall ... .medium)
+                    #endif
+                    .scrollContentBackground(.hidden)
+                    #if os(macOS)
+                    .clipShape(UnevenRoundedRectangle(
+                        topLeadingRadius: KelyphosDesign.CornerRadius.glass,
+                        bottomLeadingRadius: 0,
+                        bottomTrailingRadius: 0,
+                        topTrailingRadius: KelyphosDesign.CornerRadius.glass
+                    ))
+                    .glassEffect(in: UnevenRoundedRectangle(
+                        topLeadingRadius: KelyphosDesign.CornerRadius.glass,
+                        bottomLeadingRadius: 0,
+                        bottomTrailingRadius: 0,
+                        topTrailingRadius: KelyphosDesign.CornerRadius.glass
+                    ))
+                    #else
+                    .clipShape(.rect(cornerRadius: KelyphosDesign.CornerRadius.glass))
+                    .glassEffect(in: .rect(cornerRadius: KelyphosDesign.CornerRadius.glass))
+                    #endif
+                    .padding(.horizontal, KelyphosDesign.Padding.compact)
+                }
             }
         }
         .onAppear {
@@ -93,6 +101,41 @@ public struct KelyphosContentArea<
             guard let idx = newIndex, idx >= 0, idx < utilityItems.count else { return }
             utilitySelection = utilityItems[idx]
         }
+    }
+
+    // MARK: - Resize Handle
+
+    private func resizeHandle(containerHeight: CGFloat) -> some View {
+        let maxHeight = min(KelyphosDesign.Height.utilityAreaMax, containerHeight * 0.6)
+        return Rectangle()
+            .fill(Color.clear)
+            .frame(height: KelyphosDesign.Height.resizeHandle)
+            .contentShape(Rectangle())
+            #if os(macOS)
+            .onHover { hovering in
+                if hovering {
+                    NSCursor.resizeUpDown.push()
+                } else {
+                    NSCursor.pop()
+                }
+            }
+            #endif
+            .gesture(
+                DragGesture(minimumDistance: 1)
+                    .onChanged { value in
+                        isDraggingResize = true
+                        let newHeight = state.utilityAreaHeight - value.translation.height
+                        state.utilityAreaHeight = min(max(newHeight, KelyphosDesign.Height.utilityAreaMin), maxHeight)
+                    }
+                    .onEnded { _ in
+                        isDraggingResize = false
+                    }
+            )
+            .overlay {
+                RoundedRectangle(cornerRadius: 1.5)
+                    .fill(.tertiary)
+                    .frame(width: 36, height: 3)
+            }
     }
 
     @ViewBuilder

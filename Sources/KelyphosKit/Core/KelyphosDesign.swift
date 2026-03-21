@@ -26,6 +26,9 @@ public enum KelyphosDesign {
         public static let toolbar: CGFloat = 28
         public static let tabBar: CGFloat = 27
         public static let utilityArea: CGFloat = 260
+        public static let utilityAreaMin: CGFloat = 100
+        public static let utilityAreaMax: CGFloat = 600
+        public static let resizeHandle: CGFloat = 6
     }
 
     public enum Width {
