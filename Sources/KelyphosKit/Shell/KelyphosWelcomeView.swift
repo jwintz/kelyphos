@@ -15,6 +15,7 @@ import AppKit
 /// An optional footer spans the full width at the bottom.
 public struct KelyphosWelcomeView<FooterContent: View, RecentsContent: View>: View {
     private let title: String
+    private let subtitle: String?
     private let icon: Image?
     private let actions: [KelyphosWelcomeAction]
     private let footer: () -> FooterContent
@@ -25,6 +26,7 @@ public struct KelyphosWelcomeView<FooterContent: View, RecentsContent: View>: Vi
 
     public init(
         title: String,
+        subtitle: String? = nil,
         icon: Image? = nil,
         state: KelyphosShellState,
         actions: [KelyphosWelcomeAction],
@@ -32,6 +34,7 @@ public struct KelyphosWelcomeView<FooterContent: View, RecentsContent: View>: Vi
         @ViewBuilder recents: @escaping () -> RecentsContent
     ) {
         self.title = title
+        self.subtitle = subtitle
         self.icon = icon
         self.state = state
         self.actions = actions
@@ -120,6 +123,13 @@ public struct KelyphosWelcomeView<FooterContent: View, RecentsContent: View>: Vi
                 .font(.system(size: 13.5))
                 .foregroundStyle(.secondary)
                 .padding(.top, 2)
+
+            if let subtitle {
+                Text(subtitle)
+                    .font(.system(size: 11))
+                    .foregroundStyle(.tertiary)
+                    .padding(.top, 2)
+            }
 
             Spacer()
                 .frame(height: 40)
@@ -223,6 +233,7 @@ public struct KelyphosWelcomeView<FooterContent: View, RecentsContent: View>: Vi
 extension KelyphosWelcomeView where RecentsContent == EmptyView {
     public init(
         title: String,
+        subtitle: String? = nil,
         icon: Image? = nil,
         state: KelyphosShellState,
         actions: [KelyphosWelcomeAction],
@@ -230,6 +241,7 @@ extension KelyphosWelcomeView where RecentsContent == EmptyView {
     ) {
         self.init(
             title: title,
+            subtitle: subtitle,
             icon: icon,
             state: state,
             actions: actions,
@@ -242,12 +254,14 @@ extension KelyphosWelcomeView where RecentsContent == EmptyView {
 extension KelyphosWelcomeView where FooterContent == EmptyView, RecentsContent == EmptyView {
     public init(
         title: String,
+        subtitle: String? = nil,
         icon: Image? = nil,
         state: KelyphosShellState,
         actions: [KelyphosWelcomeAction]
     ) {
         self.init(
             title: title,
+            subtitle: subtitle,
             icon: icon,
             state: state,
             actions: actions,
@@ -260,6 +274,7 @@ extension KelyphosWelcomeView where FooterContent == EmptyView, RecentsContent =
 extension KelyphosWelcomeView where FooterContent == EmptyView {
     public init(
         title: String,
+        subtitle: String? = nil,
         icon: Image? = nil,
         state: KelyphosShellState,
         actions: [KelyphosWelcomeAction],
@@ -267,6 +282,7 @@ extension KelyphosWelcomeView where FooterContent == EmptyView {
     ) {
         self.init(
             title: title,
+            subtitle: subtitle,
             icon: icon,
             state: state,
             actions: actions,

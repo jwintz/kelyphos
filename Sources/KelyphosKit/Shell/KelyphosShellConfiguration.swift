@@ -38,6 +38,11 @@ public struct KelyphosShellConfiguration<
     /// Use for app-specific trailing items such as pills or status indicators.
     public var trailingToolbarItems: [() -> AnyView]
 
+    /// Injected trailing as a single `ToolbarItemGroup`, sharing a glass pill.
+    /// Items appear grouped with individual hover effects.
+    /// Use for related controls such as playback buttons.
+    public var trailingToolbarItemGroup: [() -> AnyView]
+
     // MARK: - Window Tab Actions (macOS)
 
     /// Called when the user triggers "Toggle Tab Bar" (Cmd+\).
@@ -84,6 +89,7 @@ public struct KelyphosShellConfiguration<
         leadingToolbar: (() -> AnyView)? = nil,
         principalToolbar: (() -> AnyView)? = nil,
         trailingToolbarItems: [() -> AnyView] = [],
+        trailingToolbarItemGroup: [() -> AnyView] = [],
         overlays: [() -> AnyView] = [],
         onToggleTabBar: (() -> Void)? = nil,
         titleMenu: (() -> AnyView)? = nil,
@@ -98,6 +104,7 @@ public struct KelyphosShellConfiguration<
         self.leadingToolbar = leadingToolbar
         self.principalToolbar = principalToolbar
         self.trailingToolbarItems = trailingToolbarItems
+        self.trailingToolbarItemGroup = trailingToolbarItemGroup
         self.overlays = overlays
         self.onToggleTabBar = onToggleTabBar
         self.titleMenu = titleMenu
@@ -120,6 +127,7 @@ extension KelyphosShellConfiguration where Content == EmptyView {
         leadingToolbar: (() -> AnyView)? = nil,
         principalToolbar: (() -> AnyView)? = nil,
         trailingToolbarItems: [() -> AnyView] = [],
+        trailingToolbarItemGroup: [() -> AnyView] = [],
         overlays: [() -> AnyView] = [],
         onToggleTabBar: (() -> Void)? = nil,
         titleMenu: (() -> AnyView)? = nil,
@@ -133,6 +141,7 @@ extension KelyphosShellConfiguration where Content == EmptyView {
         self.leadingToolbar = leadingToolbar
         self.principalToolbar = principalToolbar
         self.trailingToolbarItems = trailingToolbarItems
+        self.trailingToolbarItemGroup = trailingToolbarItemGroup
         self.overlays = overlays
         self.onToggleTabBar = onToggleTabBar
         self.titleMenu = titleMenu

@@ -161,19 +161,7 @@ struct KelyphosDemoApp: App {
     }
 
     private var aboutScene: some Scene {
-        Window("About Kelyphos", id: "about") {
-            KelyphosAboutView(title: "Kelyphos")
-                .task {
-                    if let window = NSApp.windows.first(where: { $0.title == "About Kelyphos" }) {
-                        window.standardWindowButton(.zoomButton)?.isHidden = true
-                        window.standardWindowButton(.miniaturizeButton)?.isHidden = true
-                        window.backgroundColor = .clear
-                        window.isMovableByWindowBackground = true
-                    }
-                }
-        }
-        .windowStyle(.hiddenTitleBar)
-        .windowResizability(.contentSize)
+        KelyphosAboutScene(title: "Kelyphos")
     }
     #endif
 }

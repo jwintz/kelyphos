@@ -271,6 +271,9 @@ public struct KelyphosShellView<
         // @ToolbarContentBuilder has a 10-item limit, so we split into two builder properties.
         trailingToolbarInjectedItems
 
+        // Emit grouped trailing items inside a single ToolbarItemGroup (shared glass pill).
+        trailingToolbarInjectedItemGroup
+
         if state.utilityEnabled && !configuration.utilityTabs.isEmpty {
             ToolbarItem {
                 utilityToggleButton
@@ -315,6 +318,19 @@ public struct KelyphosShellView<
                 .sharedBackgroundVisibility(.hidden)
         }
     }
+
+    /// Renders grouped trailing items inside a single `ToolbarItemGroup`.
+    /// Items share a glass background pill with individual hover effects.
+    @ToolbarContentBuilder
+    private var trailingToolbarInjectedItemGroup: some ToolbarContent {
+        if !configuration.trailingToolbarItemGroup.isEmpty {
+            ToolbarItemGroup {
+                ForEach(Array(configuration.trailingToolbarItemGroup.enumerated()), id: \.offset) { _, item in
+                    item()
+                }
+            }
+        }
+    }
     #else
     @ToolbarContentBuilder
     private var iOSTrailingToolbar: some ToolbarContent {
@@ -326,6 +342,9 @@ public struct KelyphosShellView<
         }
         ToolbarItemGroup(placement: .topBarTrailing) {
             ForEach(Array(configuration.trailingToolbarItems.enumerated()), id: \.offset) { _, item in
+                item()
+            }
+            ForEach(Array(configuration.trailingToolbarItemGroup.enumerated()), id: \.offset) { _, item in
                 item()
             }
             if state.utilityEnabled && !configuration.utilityTabs.isEmpty {
