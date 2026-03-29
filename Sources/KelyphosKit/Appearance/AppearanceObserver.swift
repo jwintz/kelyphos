@@ -8,7 +8,7 @@ import SwiftUI
 @Observable
 public final class AppearanceObserver {
     #if os(macOS)
-    private var observation: NSObjectProtocol?
+    @ObservationIgnored nonisolated(unsafe) private var observation: NSObjectProtocol?
     #endif
 
     public init() {}
@@ -40,6 +40,10 @@ public final class AppearanceObserver {
     }
 
     deinit {
-        // observation cleanup handled by stop()
+        #if os(macOS)
+        if let obs = observation {
+            DistributedNotificationCenter.default().removeObserver(obs)
+        }
+        #endif
     }
 }

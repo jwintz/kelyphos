@@ -219,7 +219,8 @@ public struct KelyphosShellView<
                             }
                             .clipShape(UnevenRoundedRectangle(topLeadingRadius: KelyphosDesign.CornerRadius.glass, bottomLeadingRadius: KelyphosDesign.CornerRadius.glass))
                         }
-                        .compositingGroup()
+                        // drawingGroup consolidates shadow rasterization with background
+                        .drawingGroup()
                         .shadow(color: .black.opacity(0.15), radius: 8, x: -2)
                         .transition(.move(edge: .trailing))
                 }
@@ -408,6 +409,9 @@ public struct KelyphosShellView<
 
     // MARK: - Background
 
+    // ZStack is required: VibrancyBackgroundView wraps a platform-native view
+    // (NSVisualEffectView / UIVisualEffectView) via a representable, so the
+    // tint color overlay must be a separate SwiftUI layer composited on top.
     private var vibrancyBackground: some View {
         ZStack {
             #if os(macOS)
@@ -476,6 +480,8 @@ private struct ShellLifecycleModifier<
     let configuration: KelyphosShellConfiguration<NavTab, InspTab, UtilTab, ContentCol, Detail>
     let appearanceObserver: AppearanceObserver
     var horizontalSizeClass: UserInterfaceSizeClass?
+
+    @State private var columnVisibilityUpdateToken: Int = 0
 
     #if os(macOS)
     /// NSEvent monitor for CMD+SHIFT+/ (keybindings overlay).
@@ -554,6 +560,8 @@ private struct ShellLifecycleModifier<
             .onChange(of: state.navigatorVisible) { _, isVisible in
                 let target: NavigationSplitViewVisibility = isVisible ? .all : .detailOnly
                 guard columnVisibility != target else { return }
+                columnVisibilityUpdateToken &+= 1
+                let token = columnVisibilityUpdateToken
                 if didAppear {
                     withAnimation(.easeInOut(duration: 0.15)) {
                         columnVisibility = target
@@ -565,9 +573,15 @@ private struct ShellLifecycleModifier<
                         columnVisibility = target
                     }
                 }
+                DispatchQueue.main.async {
+                    // Only clear if no newer update has started
+                    if columnVisibilityUpdateToken == token {
+                        columnVisibilityUpdateToken = 0
+                    }
+                }
             }
             .onChange(of: columnVisibility) { _, newValue in
-                guard didAppear else { return }
+                guard didAppear, columnVisibilityUpdateToken == 0 else { return }
                 let isVisible = (newValue == .all || newValue == .doubleColumn)
                 if state.navigatorVisible != isVisible {
                     state.navigatorVisible = isVisible

@@ -109,7 +109,7 @@ public final class KelyphosShellState {
     private var kUtilityVisible: String { "\(panelPersistencePrefix).panel.utilityVisible" }
 
     @ObservationIgnored nonisolated(unsafe) private var appearanceObserver: NSObjectProtocol?
-    @ObservationIgnored private var appearanceSaveWorkItem: DispatchWorkItem?
+    @ObservationIgnored nonisolated(unsafe) private var appearanceSaveWorkItem: DispatchWorkItem?
 
     // MARK: - Init
 
@@ -135,9 +135,20 @@ public final class KelyphosShellState {
     }
 
     deinit {
-        if let token = appearanceObserver {
-            NotificationCenter.default.removeObserver(token)
+        if let observer = appearanceObserver {
+            NotificationCenter.default.removeObserver(observer)
         }
+        appearanceSaveWorkItem?.cancel()
+    }
+
+    /// Remove all observers and cancel pending work items.
+    public func stopObserving() {
+        if let observer = appearanceObserver {
+            NotificationCenter.default.removeObserver(observer)
+            appearanceObserver = nil
+        }
+        appearanceSaveWorkItem?.cancel()
+        appearanceSaveWorkItem = nil
     }
 
     // MARK: - Appearance Detection
@@ -163,7 +174,9 @@ public final class KelyphosShellState {
             defaults.set(self.windowAppearance, forKey: self.kAppearance)
             NotificationCenter.default.post(name: .kelyphosAppearanceDidChange, object: self.persistencePrefix)
         }
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3, execute: appearanceSaveWorkItem!)
+        if let workItem = appearanceSaveWorkItem {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.3, execute: workItem)
+        }
     }
 
     private func reloadAppearance() {

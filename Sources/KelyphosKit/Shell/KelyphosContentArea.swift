@@ -138,32 +138,5 @@ public struct KelyphosContentArea<
             }
     }
 
-    @ViewBuilder
-    private var backgroundView: some View {
-        #if os(macOS)
-        ZStack {
-            VibrancyBackgroundView(
-                material: .menu,
-                blendingMode: .behindWindow,
-                isActive: true
-            )
-            backgroundTint
-                .opacity(Double(state.backgroundAlpha))
-        }
-        #else
-        ZStack {
-            Rectangle().fill(.ultraThinMaterial)
-            backgroundTint
-                .opacity(Double(state.backgroundAlpha))
-        }
-        #endif
-    }
-
-    private var backgroundTint: Color {
-        #if os(macOS)
-        Color(nsColor: state.backgroundColor)
-        #else
-        Color(uiColor: state.backgroundColor)
-        #endif
-    }
+    // Dead code removed: backgroundView and backgroundTint were unreferenced (layer audit k3-layer-audit)
 }

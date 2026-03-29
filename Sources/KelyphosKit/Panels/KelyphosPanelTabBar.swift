@@ -64,7 +64,7 @@ public struct KelyphosPanelTabBar<Tab: KelyphosPanel>: View {
                 HStack(spacing: 2) {
                     ForEach(items) { tab in
                         Button {
-                            withAnimation(.bouncy) {
+                            withAnimation(.easeInOut(duration: 0.15)) {
                                 selection = tab
                             }
                         } label: {
@@ -83,6 +83,7 @@ public struct KelyphosPanelTabBar<Tab: KelyphosPanel>: View {
                                 case .opaque:
                                     Capsule().fill(.background)
                                         .shadow(color: .primary.opacity(0.15), radius: 1, y: 0.5)
+                                        .drawingGroup() // consolidate shadow layer with fill
                                 }
                             }
                         }
