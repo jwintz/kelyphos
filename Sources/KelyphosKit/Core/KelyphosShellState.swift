@@ -91,6 +91,10 @@ public final class KelyphosShellState {
 
     public var showCommandPalette: Bool = false
 
+    // MARK: - Welcome (iOS sheet)
+
+    public var showWelcome: Bool = false
+
     // MARK: - Minibuffer Overlay (client-driven, e.g. Emacs minibuffer bridge)
 
     public var showMinibufferOverlay: Bool = false

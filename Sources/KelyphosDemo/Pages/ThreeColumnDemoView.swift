@@ -42,6 +42,11 @@ struct ThreeColumnDemoSceneView: View {
                 inspectorTabs: MessageInspectorTab.allCases.map { $0 },
                 utilityTabs: DemoUtilityTab.allCases.map { $0 },
                 scrollable: false,
+                settingsView: { [shellState] in
+                    AnyView(
+                        DemoSettingsWindowView(shellState: shellState)
+                    )
+                },
                 content: {
                     MessageListView(selection: $selectedMessage)
                 },

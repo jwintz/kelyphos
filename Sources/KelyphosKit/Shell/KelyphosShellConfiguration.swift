@@ -67,6 +67,12 @@ public struct KelyphosShellConfiguration<
     /// view in a sheet. On macOS, settings use the native `Settings` scene.
     public var settingsView: (() -> AnyView)?
 
+    // MARK: - Welcome (iOS sheet)
+
+    /// On iOS/iPadOS, presented as a full-screen cover driven by
+    /// `KelyphosShellState.showWelcome`. On macOS, welcome uses a separate `Window` scene.
+    public var welcomeView: (() -> AnyView)?
+
     // MARK: - Client Overlays
 
     /// Client-injected overlay views rendered on top of the shell content.
@@ -94,6 +100,7 @@ public struct KelyphosShellConfiguration<
         onToggleTabBar: (() -> Void)? = nil,
         titleMenu: (() -> AnyView)? = nil,
         settingsView: (() -> AnyView)? = nil,
+        welcomeView: (() -> AnyView)? = nil,
         @ViewBuilder content: @escaping () -> Content,
         @ViewBuilder detail: @escaping () -> Detail
     ) {
@@ -109,6 +116,7 @@ public struct KelyphosShellConfiguration<
         self.onToggleTabBar = onToggleTabBar
         self.titleMenu = titleMenu
         self.settingsView = settingsView
+        self.welcomeView = welcomeView
         self.content = content
         self.detail = detail
     }
@@ -132,6 +140,7 @@ extension KelyphosShellConfiguration where Content == EmptyView {
         onToggleTabBar: (() -> Void)? = nil,
         titleMenu: (() -> AnyView)? = nil,
         settingsView: (() -> AnyView)? = nil,
+        welcomeView: (() -> AnyView)? = nil,
         @ViewBuilder detail: @escaping () -> Detail
     ) {
         self.navigatorTabs = navigatorTabs
@@ -146,6 +155,7 @@ extension KelyphosShellConfiguration where Content == EmptyView {
         self.onToggleTabBar = onToggleTabBar
         self.titleMenu = titleMenu
         self.settingsView = settingsView
+        self.welcomeView = welcomeView
         self.content = nil
         self.detail = detail
     }

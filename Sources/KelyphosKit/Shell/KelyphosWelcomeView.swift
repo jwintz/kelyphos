@@ -64,7 +64,11 @@ public struct KelyphosWelcomeView<FooterContent: View, RecentsContent: View>: Vi
                     .padding(.horizontal, 16)
             }
         }
+        #if os(macOS)
         .frame(width: 740)
+        #else
+        .frame(maxWidth: .infinity)
+        #endif
         .frame(minHeight: windowHeight)
         .ignoresSafeArea()
         .background { backgroundLayer.ignoresSafeArea() }
@@ -103,7 +107,11 @@ public struct KelyphosWelcomeView<FooterContent: View, RecentsContent: View>: Vi
 
     private var leftPanel: some View {
         leftContent
+            #if os(macOS)
             .frame(width: 460)
+            #else
+            .frame(maxWidth: .infinity)
+            #endif
     }
 
     private var leftContent: some View {

@@ -20,7 +20,9 @@ public struct KelyphosSettingsView: View {
             AppearanceSettingsSection(state: state)
         }
         .formStyle(.grouped)
+        #if os(macOS)
         .fixedSize(horizontal: false, vertical: true)
         .frame(width: 450)
+        #endif
     }
 }

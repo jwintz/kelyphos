@@ -108,12 +108,7 @@ struct KelyphosDemoApp: App {
     #if os(macOS)
     private var settingsScene: some Scene {
         SwiftUI.Settings {
-            TabView {
-                GeneralSettingsTab()
-                    .tabItem { Label("General", systemImage: "gearshape") }
-                KelyphosSettingsView(state: settingsShellState)
-                    .tabItem { Label("Appearance", systemImage: "paintbrush") }
-            }
+            DemoSettingsWindowView(shellState: settingsShellState)
         }
     }
 
@@ -172,6 +167,7 @@ struct KelyphosDemoApp: App {
 /// shell and showcase state so tabs can navigate independently.
 private struct DemoSceneView: View {
     @State private var shellState = KelyphosShellState(persistencePrefix: "kelyphos.demo")
+    @State private var welcomeShellState = KelyphosShellState(persistencePrefix: "kelyphos.demo")
     @State private var showcaseState = ShowcaseState()
     @State private var commandPaletteRegistry = KelyphosCommandPaletteRegistry()
     @Environment(\.openWindow) private var openWindow
@@ -186,6 +182,30 @@ private struct DemoSceneView: View {
                 navigatorTabs: DemoNavigatorTab.allCases.map { $0 },
                 inspectorTabs: DemoInspectorTab.allCases.map { $0 },
                 utilityTabs: DemoUtilityTab.allCases.map { $0 },
+                settingsView: { [shellState] in
+                    AnyView(
+                        DemoSettingsWindowView(shellState: shellState)
+                    )
+                },
+                welcomeView: { [shellState, welcomeShellState] in
+                    AnyView(
+                        KelyphosWelcomeView(
+                            title: "Kelyphos",
+                            state: welcomeShellState,
+                            actions: [
+                                KelyphosWelcomeAction(systemImage: "play.circle", title: "Continue") {
+                                    shellState.showWelcome = false
+                                },
+                                KelyphosWelcomeAction(systemImage: "plus.square", title: "New Project") {
+                                    shellState.showWelcome = false
+                                },
+                                KelyphosWelcomeAction(systemImage: "folder", title: "Open Project") {
+                                    shellState.showWelcome = false
+                                },
+                            ]
+                        )
+                    )
+                },
                 detail: { DemoContentView() }
             ),
             commandPaletteRegistry: commandPaletteRegistry
@@ -204,6 +224,8 @@ private struct DemoSceneView: View {
                 }
                 openWindow(id: "welcome")
             }
+            #else
+            shellState.showWelcome = true
             #endif
         }
         .onChange(of: showcaseState.selectedItem) { _, newItem in

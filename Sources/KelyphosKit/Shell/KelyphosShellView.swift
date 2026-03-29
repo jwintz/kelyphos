@@ -39,6 +39,7 @@ public struct KelyphosShellView<
     @State private var columnVisibility: NavigationSplitViewVisibility = .detailOnly
     @State private var didAppear = false
     @State private var showingSettings = false
+    @State private var settingsDetent: PresentationDetent = .large
 
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
 
@@ -114,6 +115,13 @@ public struct KelyphosShellView<
             .environment(\.kelyphosCommandPaletteRegistry, commandPaletteRegistry)
             #if os(macOS)
             .focusedSceneValue(\.kelyphosShellState, state)
+            #else
+            .sheet(isPresented: $state.showWelcome) {
+                if let welcomeBuilder = configuration.welcomeView {
+                    welcomeBuilder()
+                        .interactiveDismissDisabled()
+                }
+            }
             #endif
     }
 
@@ -162,6 +170,17 @@ public struct KelyphosShellView<
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         #if !os(macOS)
         .dynamicTypeSize(.xSmall ... .medium)
+        .toolbar {
+            if configuration.settingsView != nil {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button {
+                        showingSettings = true
+                    } label: {
+                        Image(systemName: "gearshape")
+                    }
+                }
+            }
+        }
         #endif
         .navigationSplitViewColumnWidth(ideal: KelyphosDesign.Width.sidebarIdeal)
         .background {
@@ -217,7 +236,7 @@ public struct KelyphosShellView<
                                 }
                             }
                     }
-                    .presentationDetents([.medium, .large])
+                    .presentationDetents([.medium, .large], selection: $settingsDetent)
                 }
             }
             #endif
@@ -352,13 +371,6 @@ public struct KelyphosShellView<
             }
             if state.inspectorEnabled && !configuration.inspectorTabs.isEmpty {
                 inspectorToggleButton
-            }
-            if configuration.settingsView != nil {
-                Button {
-                    showingSettings = true
-                } label: {
-                    Image(systemName: "gearshape")
-                }
             }
         }
     }
