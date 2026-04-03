@@ -67,7 +67,6 @@ struct KelyphosDemoApp: App {
 
     var body: some Scene {
         mainWindowGroup
-        threeColumnWindowGroup
 
         #if os(macOS)
         settingsScene
@@ -88,21 +87,8 @@ struct KelyphosDemoApp: App {
                     openWindow(id: "about")
                 }
             }
-            CommandGroup(after: .newItem) {
-                Button("Three-Column Demo") {
-                    openWindow(id: "three-column")
-                }
-                .keyboardShortcut("t", modifiers: [.command, .shift])
-            }
             #endif
         }
-    }
-
-    private var threeColumnWindowGroup: some Scene {
-        WindowGroup("Kelyphos Mail", id: "three-column") {
-            ThreeColumnDemoSceneView()
-        }
-        .commands { KelyphosCommands() }
     }
 
     #if os(macOS)
@@ -206,6 +192,7 @@ private struct DemoSceneView: View {
                         )
                     )
                 },
+                content: { DemoContentColumnView() },
                 detail: { DemoContentView() }
             ),
             commandPaletteRegistry: commandPaletteRegistry
@@ -258,10 +245,11 @@ private struct DemoSceneView: View {
             },
         ])
 
-        let openWindowAction = openWindow
         commandPaletteRegistry.register(
-            KelyphosCommand(id: "demo.three-column", title: "Open Three-Column Demo", subtitle: "Mail-like layout", systemImage: "rectangle.split.3x1") {
-                openWindowAction(id: "three-column")
+            KelyphosCommand(id: "shell.toggle-content-column", title: "Toggle Content Column", systemImage: "rectangle.split.3x1") { [shellState] in
+                withAnimation(.easeInOut(duration: 0.15)) {
+                    shellState.contentColumnVisible.toggle()
+                }
             }
         )
 

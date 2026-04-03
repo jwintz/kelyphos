@@ -36,8 +36,9 @@ public struct KelyphosShellView<
     @Bindable var state: KelyphosShellState
     let configuration: KelyphosShellConfiguration<NavTab, InspTab, UtilTab, Content, Detail>
 
-    @State private var columnVisibility: NavigationSplitViewVisibility = .detailOnly
+    @State private var columnVisibility: NavigationSplitViewVisibility
     @State private var didAppear = false
+    @State private var contentColumnWidth: CGFloat = 280
     @State private var showingSettings = false
     @State private var settingsDetent: PresentationDetent = .large
 
@@ -77,6 +78,11 @@ public struct KelyphosShellView<
         self.configuration = configuration
         self._keybindingRegistry = State(initialValue: keybindingRegistry ?? KelyphosKeybindingRegistry())
         self._commandPaletteRegistry = State(initialValue: commandPaletteRegistry ?? KelyphosCommandPaletteRegistry())
+
+        // Always 2-column NavigationSplitView: .all = sidebar+detail,
+        // .detailOnly = detail only. Content column is inside the detail.
+        let initialVisibility: NavigationSplitViewVisibility = state.navigatorVisible ? .all : .detailOnly
+        self._columnVisibility = State(initialValue: initialVisibility)
     }
 
     public var body: some View {
@@ -127,38 +133,94 @@ public struct KelyphosShellView<
 
     // MARK: - Main Content
 
+    /// The content column (when provided and visible) is rendered inside the
+    /// NavigationSplitView detail via an HStack. This keeps a single 2-column
+    /// NavigationSplitView at all times, preserving toolbar geometry, inspector
+    /// attachment, and column visibility state across toggles.
     @ViewBuilder
     private var mainContent: some View {
         if state.navigatorEnabled {
-            if let contentBuilder = configuration.content {
-                // Three-column: Navigator | Content | Detail
-                NavigationSplitView(columnVisibility: $columnVisibility) {
-                    sidebarContent
-                } content: {
-                    contentBuilder()
-                        .navigationSplitViewColumnWidth(ideal: KelyphosDesign.Width.contentIdeal)
-                } detail: {
-                    detailContent
-                }
-            } else {
-                // Two-column: Navigator | Detail
-                NavigationSplitView(columnVisibility: $columnVisibility) {
-                    sidebarContent
-                } detail: {
-                    detailContent
-                }
-            }
-        } else if let contentBuilder = configuration.content {
-            // No navigator, but content column present: Content | Detail
             NavigationSplitView(columnVisibility: $columnVisibility) {
-                contentBuilder()
-                    .navigationSplitViewColumnWidth(ideal: KelyphosDesign.Width.contentIdeal)
+                sidebarContent
             } detail: {
-                detailContent
+                detailWithContentColumn
             }
         } else {
-            detailContent
+            detailWithContentColumn
         }
+    }
+
+    /// Wraps detailContentBase with an optional leading content column,
+    /// then applies toolbar and inspector at the outermost level so they
+    /// remain direct children of the NavigationSplitView detail slot.
+    @ViewBuilder
+    private var detailWithContentColumn: some View {
+        Group {
+            if configuration.content != nil {
+                // Structural branch: always HStack when content closure is provided.
+                // contentColumnVisible toggles children inside the HStack,
+                // keeping the outer view identity stable for toolbar/inspector.
+                HStack(spacing: 0) {
+                    if state.contentColumnVisible {
+                        configuration.content!()
+                            .frame(width: contentColumnWidth)
+                            .frame(maxHeight: .infinity)
+                        KelyphosResizableDivider(width: $contentColumnWidth, minWidth: 200, maxWidth: 400)
+                    }
+                    detailContentBase
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                }
+            } else {
+                detailContentBase
+            }
+        }
+        #if os(macOS)
+        .clipped()
+        .toolbar { trailingToolbar }
+        .inspector(isPresented: inspectorVisibleBinding) {
+            inspectorContent
+                .transaction { $0.animation = nil }
+        }
+        #else
+        .navigationTitle(state.title)
+        .toolbarTitleDisplayMode(.inline)
+        .toolbar { iOSTrailingToolbar }
+        .overlay(alignment: .trailing) {
+            if inspectorVisibleBinding.wrappedValue {
+                inspectorContent
+                    .scrollContentBackground(.hidden)
+                    .frame(width: 320)
+                    .frame(maxHeight: .infinity)
+                    .clipped()
+                    .background {
+                        ZStack {
+                            Rectangle().fill(.ultraThinMaterial)
+                            Color(uiColor: state.backgroundColor)
+                                .opacity(Double(state.backgroundAlpha))
+                        }
+                        .clipShape(UnevenRoundedRectangle(topLeadingRadius: KelyphosDesign.CornerRadius.glass, bottomLeadingRadius: KelyphosDesign.CornerRadius.glass))
+                    }
+                    .drawingGroup()
+                    .shadow(color: .black.opacity(0.15), radius: 8, x: -2)
+                    .transition(.move(edge: .trailing))
+            }
+        }
+        .sheet(isPresented: $showingSettings) {
+            if let settingsBuilder = configuration.settingsView {
+                NavigationStack {
+                    settingsBuilder()
+                        .navigationTitle("Settings")
+                        .navigationBarTitleDisplayMode(.inline)
+                        .toolbar {
+                            ToolbarItem(placement: .confirmationAction) {
+                                Button("Done") { showingSettings = false }
+                            }
+                        }
+                }
+                .presentationDetents([.medium, .large], selection: $settingsDetent)
+            }
+        }
+        #endif
     }
 
     private var sidebarContent: some View {
@@ -189,58 +251,6 @@ public struct KelyphosShellView<
                     .preference(key: NavigatorWidthKey.self, value: geo.size.width)
             }
         }
-    }
-
-    // Detail content: scrollable main view + utility panel, wrapped with inspector
-    @ViewBuilder
-    private var detailContent: some View {
-        detailContentBase
-            #if os(macOS)
-            .toolbar { trailingToolbar }
-            .inspector(isPresented: inspectorVisibleBinding) {
-                inspectorContent
-            }
-            #else
-            .navigationTitle(state.title)
-            .toolbarTitleDisplayMode(.inline)
-            .toolbar { iOSTrailingToolbar }
-            .overlay(alignment: .trailing) {
-                if inspectorVisibleBinding.wrappedValue {
-                    inspectorContent
-                        .scrollContentBackground(.hidden)
-                        .frame(width: 320)
-                        .frame(maxHeight: .infinity)
-                        .clipped()
-                        .background {
-                            ZStack {
-                                Rectangle().fill(.ultraThinMaterial)
-                                Color(uiColor: state.backgroundColor)
-                                    .opacity(Double(state.backgroundAlpha))
-                            }
-                            .clipShape(UnevenRoundedRectangle(topLeadingRadius: KelyphosDesign.CornerRadius.glass, bottomLeadingRadius: KelyphosDesign.CornerRadius.glass))
-                        }
-                        // drawingGroup consolidates shadow rasterization with background
-                        .drawingGroup()
-                        .shadow(color: .black.opacity(0.15), radius: 8, x: -2)
-                        .transition(.move(edge: .trailing))
-                }
-            }
-            .sheet(isPresented: $showingSettings) {
-                if let settingsBuilder = configuration.settingsView {
-                    NavigationStack {
-                        settingsBuilder()
-                            .navigationTitle("Settings")
-                            .navigationBarTitleDisplayMode(.inline)
-                            .toolbar {
-                                ToolbarItem(placement: .confirmationAction) {
-                                    Button("Done") { showingSettings = false }
-                                }
-                            }
-                    }
-                    .presentationDetents([.medium, .large], selection: $settingsDetent)
-                }
-            }
-            #endif
     }
 
     private var detailContentBase: some View {
@@ -293,6 +303,12 @@ public struct KelyphosShellView<
 
         // Emit grouped trailing items inside a single ToolbarItemGroup (shared glass pill).
         trailingToolbarInjectedItemGroup
+
+        if configuration.content != nil {
+            ToolbarItem {
+                contentColumnToggleButton
+            }
+        }
 
         if state.utilityEnabled && !configuration.utilityTabs.isEmpty {
             ToolbarItem {
@@ -367,6 +383,9 @@ public struct KelyphosShellView<
             ForEach(Array(configuration.trailingToolbarItemGroup.enumerated()), id: \.offset) { _, item in
                 item()
             }
+            if configuration.content != nil {
+                contentColumnToggleButton
+            }
             if state.utilityEnabled && !configuration.utilityTabs.isEmpty {
                 utilityToggleButton
             }
@@ -376,6 +395,17 @@ public struct KelyphosShellView<
         }
     }
     #endif
+
+    private var contentColumnToggleButton: some View {
+        Button {
+            state.contentColumnVisible.toggle()
+        } label: {
+            Image(systemName: "rectangle.split.3x1")
+        }
+        .help(state.contentColumnVisible ? "Hide Content Column" : "Show Content Column")
+        .accessibilityIdentifier("ContentColumnToolbarToggle")
+        .accessibilityLabel("Toggle Content Column")
+    }
 
     private var utilityToggleButton: some View {
         Button {
@@ -511,7 +541,7 @@ private struct ShellLifecycleModifier<
                 var transaction = Transaction()
                 transaction.disablesAnimations = true
                 withTransaction(transaction) {
-                    columnVisibility = state.navigatorVisible ? .all : .detailOnly
+                    columnVisibility = columnVisibilityTarget(navigatorVisible: state.navigatorVisible)
                     didAppear = true
                 }
                 appearanceObserver.start(updating: state.colorTheme)
@@ -558,7 +588,7 @@ private struct ShellLifecycleModifier<
                 if !enabled { state.utilityAreaVisible = false }
             }
             .onChange(of: state.navigatorVisible) { _, isVisible in
-                let target: NavigationSplitViewVisibility = isVisible ? .all : .detailOnly
+                let target = columnVisibilityTarget(navigatorVisible: isVisible)
                 guard columnVisibility != target else { return }
                 columnVisibilityUpdateToken &+= 1
                 let token = columnVisibilityUpdateToken
@@ -582,9 +612,27 @@ private struct ShellLifecycleModifier<
             }
             .onChange(of: columnVisibility) { _, newValue in
                 guard didAppear, columnVisibilityUpdateToken == 0 else { return }
+                // Always 2-column: .all or .doubleColumn means navigator visible
                 let isVisible = (newValue == .all || newValue == .doubleColumn)
                 if state.navigatorVisible != isVisible {
                     state.navigatorVisible = isVisible
+                }
+            }
+            .onChange(of: state.contentColumnVisible) { _, _ in
+                // Reset column visibility to match the new layout mode
+                let target = columnVisibilityTarget(navigatorVisible: state.navigatorVisible)
+                columnVisibilityUpdateToken &+= 1
+                let token = columnVisibilityUpdateToken
+                if didAppear {
+                    withAnimation(.easeInOut(duration: 0.15)) {
+                        columnVisibility = target
+                    }
+                }
+                state.savePanelState()
+                DispatchQueue.main.async {
+                    if columnVisibilityUpdateToken == token {
+                        columnVisibilityUpdateToken = 0
+                    }
                 }
             }
             .onChange(of: state.windowAppearance) { _, newValue in
@@ -596,6 +644,12 @@ private struct ShellLifecycleModifier<
             .onChange(of: state.vibrancyMaterial) { _, _ in
                 state.saveAppearance()
             }
+    }
+
+    /// Compute the correct NavigationSplitViewVisibility.
+    /// Always 2-column: navigator visible → .all, hidden → .detailOnly.
+    private func columnVisibilityTarget(navigatorVisible: Bool) -> NavigationSplitViewVisibility {
+        navigatorVisible ? .all : .detailOnly
     }
 
     #if os(macOS)
@@ -655,5 +709,42 @@ private struct ShellLifecycleModifier<
         #endif
         state.colorTheme.refreshAppearance()
         state.saveAppearance()
+    }
+}
+
+// MARK: - Resizable Divider
+
+/// A vertical divider that can be dragged to resize an adjacent column.
+struct KelyphosResizableDivider: View {
+    @Binding var width: CGFloat
+    let minWidth: CGFloat
+    let maxWidth: CGFloat
+
+    @State private var isDragging = false
+
+    var body: some View {
+        Rectangle()
+            .fill(Color(white: 0.5, opacity: 0.2))
+            .frame(width: 1)
+            .frame(maxHeight: .infinity)
+            .contentShape(Rectangle().inset(by: -3))
+            .onHover { hovering in
+                if hovering {
+                    NSCursor.resizeLeftRight.push()
+                } else {
+                    NSCursor.pop()
+                }
+            }
+            .gesture(
+                DragGesture(coordinateSpace: .global)
+                    .onChanged { value in
+                        if !isDragging { isDragging = true }
+                        let newWidth = width + value.translation.width
+                        width = min(max(newWidth, minWidth), maxWidth)
+                    }
+                    .onEnded { _ in
+                        isDragging = false
+                    }
+            )
     }
 }

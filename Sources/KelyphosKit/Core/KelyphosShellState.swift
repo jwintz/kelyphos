@@ -60,6 +60,7 @@ public final class KelyphosShellState {
     // MARK: - Panel Visibility
 
     public var navigatorVisible: Bool = false
+    public var contentColumnVisible: Bool = false
     public var inspectorVisible: Bool = false
     public var utilityAreaVisible: Bool = false
 
@@ -105,6 +106,7 @@ public final class KelyphosShellState {
     private var kMaterial: String { "\(persistencePrefix).appearance.material" }
     private var kAppearance: String { "\(persistencePrefix).appearance.mode" }
     private var kNavigatorVisible: String { "\(panelPersistencePrefix).panel.navigatorVisible" }
+    private var kContentColumnVisible: String { "\(panelPersistencePrefix).panel.contentColumnVisible" }
     private var kInspectorVisible: String { "\(panelPersistencePrefix).panel.inspectorVisible" }
     private var kUtilityVisible: String { "\(panelPersistencePrefix).panel.utilityVisible" }
 
@@ -197,6 +199,7 @@ public final class KelyphosShellState {
     public func savePanelState() {
         let defaults = UserDefaults.standard
         defaults.set(navigatorVisible, forKey: kNavigatorVisible)
+        defaults.set(contentColumnVisible, forKey: kContentColumnVisible)
         defaults.set(inspectorVisible, forKey: kInspectorVisible)
         defaults.set(utilityAreaVisible, forKey: kUtilityVisible)
     }
@@ -205,6 +208,9 @@ public final class KelyphosShellState {
         let defaults = UserDefaults.standard
         if defaults.object(forKey: kNavigatorVisible) != nil {
             self.navigatorVisible = defaults.bool(forKey: kNavigatorVisible)
+        }
+        if defaults.object(forKey: kContentColumnVisible) != nil {
+            self.contentColumnVisible = defaults.bool(forKey: kContentColumnVisible)
         }
         if defaults.object(forKey: kInspectorVisible) != nil {
             self.inspectorVisible = defaults.bool(forKey: kInspectorVisible)

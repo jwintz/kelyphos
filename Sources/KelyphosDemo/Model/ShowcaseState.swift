@@ -5,6 +5,7 @@ import SwiftUI
 @MainActor @Observable
 final class ShowcaseState {
     var selectedItem: ShowcaseItem?
+    var selectedSection: ShowcaseSection?
 
     var bookmarkedItemIDs: Set<String> {
         didSet { persistBookmarks() }

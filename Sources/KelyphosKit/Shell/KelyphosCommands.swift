@@ -33,6 +33,17 @@ public struct KelyphosCommands: Commands {
 
             Divider()
 
+            // Content Column
+            Section {
+                Button(state?.contentColumnVisible == true ? "Hide Content Column" : "Show Content Column") {
+                    guard let state else { return }
+                    state.contentColumnVisible.toggle()
+                }
+                .keyboardShortcut("0", modifiers: [.command, .shift])
+            }
+
+            Divider()
+
             // Inspector
             Section {
                 Button(state?.inspectorVisible == true ? "Hide Inspector" : "Show Inspector") {
