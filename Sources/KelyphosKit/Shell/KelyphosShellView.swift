@@ -165,6 +165,7 @@ public struct KelyphosShellView<
                         configuration.content!()
                             .frame(width: contentColumnWidth)
                             .frame(maxHeight: .infinity)
+                            .clipped()
                         KelyphosResizableDivider(width: $contentColumnWidth, minWidth: 200, maxWidth: 400)
                     }
                     detailContentBase
@@ -175,7 +176,6 @@ public struct KelyphosShellView<
             }
         }
         #if os(macOS)
-        .clipped()
         .toolbar { trailingToolbar }
         .inspector(isPresented: inspectorVisibleBinding) {
             inspectorContent
