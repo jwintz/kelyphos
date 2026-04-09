@@ -22,6 +22,19 @@ private struct InspectorWidthKey: PreferenceKey {
     }
 }
 
+private struct PlatformInspectorPresentation: ViewModifier {
+    func body(content: Content) -> some View {
+        #if os(macOS)
+        content
+        #else
+        content
+            .dynamicTypeSize(.xSmall ... .medium)
+            .presentationDetents([.medium, .large])
+            .presentationBackgroundInteraction(.enabled)
+        #endif
+    }
+}
+
 // MARK: - Shell View
 
 /// The main Kelyphos shell: NavigationSplitView with navigator sidebar,
@@ -185,25 +198,9 @@ public struct KelyphosShellView<
         .navigationTitle(state.title)
         .toolbarTitleDisplayMode(.inline)
         .toolbar { iOSTrailingToolbar }
-        .overlay(alignment: .trailing) {
-            if inspectorVisibleBinding.wrappedValue {
-                inspectorContent
-                    .scrollContentBackground(.hidden)
-                    .frame(width: 320)
-                    .frame(maxHeight: .infinity)
-                    .clipped()
-                    .background {
-                        ZStack {
-                            Rectangle().fill(.ultraThinMaterial)
-                            Color(uiColor: state.backgroundColor)
-                                .opacity(Double(state.backgroundAlpha))
-                        }
-                        .clipShape(UnevenRoundedRectangle(topLeadingRadius: KelyphosDesign.CornerRadius.glass, bottomLeadingRadius: KelyphosDesign.CornerRadius.glass))
-                    }
-                    .drawingGroup()
-                    .shadow(color: .black.opacity(0.15), radius: 8, x: -2)
-                    .transition(.move(edge: .trailing))
-            }
+        .inspector(isPresented: inspectorVisibleBinding) {
+            inspectorContent
+                .transaction { $0.animation = nil }
         }
         .sheet(isPresented: $showingSettings) {
             if let settingsBuilder = configuration.settingsView {
@@ -271,10 +268,12 @@ public struct KelyphosShellView<
             selectionStyle: .opaque
         )
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        #if !os(macOS)
-        .dynamicTypeSize(.xSmall ... .medium)
-        #endif
-        .inspectorColumnWidth(ideal: KelyphosDesign.Width.inspectorIdeal)
+        .modifier(PlatformInspectorPresentation())
+        .inspectorColumnWidth(
+            min: KelyphosDesign.Width.inspectorMin,
+            ideal: KelyphosDesign.Width.inspectorIdeal,
+            max: KelyphosDesign.Width.inspectorMax
+        )
         .background {
             GeometryReader { geo in
                 Color.clear
@@ -372,9 +371,6 @@ public struct KelyphosShellView<
     private var iOSTrailingToolbar: some ToolbarContent {
         if let leading = configuration.leadingToolbar {
             ToolbarItemGroup(placement: .topBarLeading) { leading() }
-        }
-        if let principal = configuration.principalToolbar {
-            ToolbarItem(placement: .principal) { principal() }
         }
         ToolbarItemGroup(placement: .topBarTrailing) {
             ForEach(Array(configuration.trailingToolbarItems.enumerated()), id: \.offset) { _, item in
@@ -728,6 +724,7 @@ struct KelyphosResizableDivider: View {
             .frame(width: 1)
             .frame(maxHeight: .infinity)
             .contentShape(Rectangle().inset(by: -3))
+            #if os(macOS)
             .onHover { hovering in
                 if hovering {
                     NSCursor.resizeLeftRight.push()
@@ -735,6 +732,7 @@ struct KelyphosResizableDivider: View {
                     NSCursor.pop()
                 }
             }
+            #endif
             .gesture(
                 DragGesture(coordinateSpace: .global)
                     .onChanged { value in

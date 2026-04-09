@@ -29,8 +29,9 @@ public struct KelyphosShellConfiguration<
     /// Use for app-specific leading toolbar items such as a branch picker.
     public var leadingToolbar: (() -> AnyView)?
 
-    /// Injected into `.principal` placement on both platforms.
-    /// Use for a centered toolbar element such as an environment pill.
+    /// Injected into `.principal` placement on macOS.
+    /// On iOS and iPadOS, Kelyphos intentionally avoids `.principal` so the
+    /// system sidebar toggle and inspector toolbar geometry stay intact.
     public var principalToolbar: (() -> AnyView)?
 
     /// Injected trailing, before the panel-toggle buttons.
