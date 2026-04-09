@@ -14,13 +14,13 @@ generate = "swift run xcodegen generate --spec project.yml"
 generate-if-needed = "bash -c 'PROJECT=Kelyphos.xcodeproj/project.pbxproj; if [ ! -f \"$PROJECT\" ] || [ -n \"$(find project.yml Sources Tests Kelyphos.icon -newer \"$PROJECT\" -print -quit 2>/dev/null)\" ]; then swift run xcodegen generate --spec project.yml; else echo \"Xcode project up to date.\"; fi'"
 
 # Always build (use for forced rebuild).
-build = { cmd = "xcodebuild -project Kelyphos.xcodeproj -scheme KelyphosDemo -configuration Debug build -allowProvisioningUpdates", depends-on = ["generate-if-needed"], env = { SDKROOT = "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk" } }
+build = { cmd = "xcodebuild -project Kelyphos.xcodeproj -scheme KelyphosDemo -configuration Debug build -allowProvisioningUpdates -skipPackagePluginValidation", depends-on = ["generate-if-needed"], env = { SDKROOT = "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk" } }
 
 # Build only when sources, project, or resources are newer than the built binary.
-build-if-needed = { cmd = "bash -c 'BUILT=$(xcodebuild -project Kelyphos.xcodeproj -scheme KelyphosDemo -configuration Debug -showBuildSettings 2>/dev/null | grep BUILT_PRODUCTS_DIR | sed \"s/.*= //\" | head -n 1); BIN=\"$BUILT/KelyphosDemo.app/Contents/MacOS/KelyphosDemo\"; if [ -f \"$BIN\" ] && [ -z \"$(find Sources project.yml Kelyphos.xcodeproj/project.pbxproj -newer \"$BIN\" 2>/dev/null | head -1)\" ]; then echo \"Build up to date.\"; else xcodebuild -project Kelyphos.xcodeproj -scheme KelyphosDemo -configuration Debug build -allowProvisioningUpdates; fi'", depends-on = ["generate-if-needed"], env = { SDKROOT = "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk" } }
+build-if-needed = { cmd = "bash -c 'BUILT=$(xcodebuild -project Kelyphos.xcodeproj -scheme KelyphosDemo -configuration Debug -showBuildSettings 2>/dev/null | grep BUILT_PRODUCTS_DIR | sed \"s/.*= //\" | head -n 1); BIN=\"$BUILT/KelyphosDemo.app/Contents/MacOS/KelyphosDemo\"; if [ -f \"$BIN\" ] && [ -z \"$(find Sources project.yml Kelyphos.xcodeproj/project.pbxproj -newer \"$BIN\" 2>/dev/null | head -1)\" ]; then echo \"Build up to date.\"; else xcodebuild -project Kelyphos.xcodeproj -scheme KelyphosDemo -configuration Debug build -allowProvisioningUpdates -skipPackagePluginValidation; fi'", depends-on = ["generate-if-needed"], env = { SDKROOT = "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk" } }
 
 # Run unit tests.
-test = { cmd = "xcodebuild -project Kelyphos.xcodeproj -scheme KelyphosDemo -configuration Debug test -allowProvisioningUpdates -destination 'platform=macOS'", depends-on = ["generate-if-needed"], env = { SDKROOT = "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk" } }
+test = { cmd = "xcodebuild -project Kelyphos.xcodeproj -scheme KelyphosDemo -configuration Debug test -allowProvisioningUpdates -skipPackagePluginValidation -destination 'platform=macOS'", depends-on = ["generate-if-needed"], env = { SDKROOT = "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk" } }
 
 # Build if needed, launch app.
 # Note: uses open -a with the bundle path instead of open -W because
