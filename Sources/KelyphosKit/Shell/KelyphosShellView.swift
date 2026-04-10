@@ -22,19 +22,6 @@ private struct InspectorWidthKey: PreferenceKey {
     }
 }
 
-private struct PlatformInspectorPresentation: ViewModifier {
-    func body(content: Content) -> some View {
-        #if os(macOS)
-        content
-        #else
-        content
-            .dynamicTypeSize(.xSmall ... .medium)
-            .presentationDetents([.medium, .large])
-            .presentationBackgroundInteraction(.enabled)
-        #endif
-    }
-}
-
 // MARK: - Shell View
 
 /// The main Kelyphos shell: NavigationSplitView with navigator sidebar,
@@ -49,7 +36,6 @@ public struct KelyphosShellView<
     @Bindable var state: KelyphosShellState
     let configuration: KelyphosShellConfiguration<NavTab, InspTab, UtilTab, Content, Detail>
 
-    @State private var columnVisibility: NavigationSplitViewVisibility
     @State private var didAppear = false
     @State private var contentColumnWidth: CGFloat = 280
     @State private var showingSettings = false
@@ -65,6 +51,22 @@ public struct KelyphosShellView<
     @State private var commandPaletteRegistry: KelyphosCommandPaletteRegistry
 
     private let appearanceObserver = AppearanceObserver()
+
+    private var navigatorColumnVisibility: Binding<NavigationSplitViewVisibility> {
+        Binding(
+            get: {
+                guard state.navigatorEnabled else { return .detailOnly }
+                return state.navigatorVisible ? .doubleColumn : .detailOnly
+            },
+            set: { newValue in
+                guard state.navigatorEnabled else {
+                    state.navigatorVisible = false
+                    return
+                }
+                state.navigatorVisible = (newValue != .detailOnly)
+            }
+        )
+    }
 
     private var inspectorVisibleBinding: Binding<Bool> {
         Binding(
@@ -91,11 +93,6 @@ public struct KelyphosShellView<
         self.configuration = configuration
         self._keybindingRegistry = State(initialValue: keybindingRegistry ?? KelyphosKeybindingRegistry())
         self._commandPaletteRegistry = State(initialValue: commandPaletteRegistry ?? KelyphosCommandPaletteRegistry())
-
-        // Always 2-column NavigationSplitView: .all = sidebar+detail,
-        // .detailOnly = detail only. Content column is inside the detail.
-        let initialVisibility: NavigationSplitViewVisibility = state.navigatorVisible ? .all : .detailOnly
-        self._columnVisibility = State(initialValue: initialVisibility)
     }
 
     public var body: some View {
@@ -116,7 +113,6 @@ public struct KelyphosShellView<
             .onPreferenceChange(InspectorWidthKey.self) { state.inspectorWidth = $0 }
             .modifier(ShellLifecycleModifier(
                 state: state,
-                columnVisibility: $columnVisibility,
                 didAppear: $didAppear,
                 navigatorItems: $navigatorItems,
                 navigatorSelection: $navigatorSelection,
@@ -153,13 +149,25 @@ public struct KelyphosShellView<
     @ViewBuilder
     private var mainContent: some View {
         if state.navigatorEnabled {
-            NavigationSplitView(columnVisibility: $columnVisibility) {
+            NavigationSplitView(columnVisibility: navigatorColumnVisibility) {
                 sidebarContent
             } detail: {
                 detailWithContentColumn
             }
+            #if !os(macOS)
+            .inspector(isPresented: inspectorVisibleBinding) {
+                inspectorContent
+                    .transaction { $0.animation = nil }
+            }
+            #endif
         } else {
             detailWithContentColumn
+            #if !os(macOS)
+            .inspector(isPresented: inspectorVisibleBinding) {
+                inspectorContent
+                    .transaction { $0.animation = nil }
+            }
+            #endif
         }
     }
 
@@ -198,10 +206,6 @@ public struct KelyphosShellView<
         .navigationTitle(state.title)
         .toolbarTitleDisplayMode(.inline)
         .toolbar { iOSTrailingToolbar }
-        .inspector(isPresented: inspectorVisibleBinding) {
-            inspectorContent
-                .transaction { $0.animation = nil }
-        }
         .sheet(isPresented: $showingSettings) {
             if let settingsBuilder = configuration.settingsView {
                 NavigationStack {
@@ -268,7 +272,9 @@ public struct KelyphosShellView<
             selectionStyle: .opaque
         )
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .modifier(PlatformInspectorPresentation())
+        #if !os(macOS)
+        .dynamicTypeSize(.xSmall ... .medium)
+        #endif
         .inspectorColumnWidth(
             min: KelyphosDesign.Width.inspectorMin,
             ideal: KelyphosDesign.Width.inspectorIdeal,
@@ -497,7 +503,6 @@ private struct ShellLifecycleModifier<
     Detail: View
 >: ViewModifier {
     @Bindable var state: KelyphosShellState
-    @Binding var columnVisibility: NavigationSplitViewVisibility
     @Binding var didAppear: Bool
     @Binding var navigatorItems: [NavTab]
     @Binding var navigatorSelection: NavTab?
@@ -506,8 +511,6 @@ private struct ShellLifecycleModifier<
     let configuration: KelyphosShellConfiguration<NavTab, InspTab, UtilTab, ContentCol, Detail>
     let appearanceObserver: AppearanceObserver
     var horizontalSizeClass: UserInterfaceSizeClass?
-
-    @State private var columnVisibilityUpdateToken: Int = 0
 
     #if os(macOS)
     /// NSEvent monitor for CMD+SHIFT+/ (keybindings overlay).
@@ -534,12 +537,7 @@ private struct ShellLifecycleModifier<
                 }
                 #endif
 
-                var transaction = Transaction()
-                transaction.disablesAnimations = true
-                withTransaction(transaction) {
-                    columnVisibility = columnVisibilityTarget(navigatorVisible: state.navigatorVisible)
-                    didAppear = true
-                }
+                didAppear = true
                 appearanceObserver.start(updating: state.colorTheme)
                 #if os(macOS)
                 applyAppearance(state.windowAppearance)
@@ -583,53 +581,8 @@ private struct ShellLifecycleModifier<
             .onChange(of: state.utilityEnabled) { _, enabled in
                 if !enabled { state.utilityAreaVisible = false }
             }
-            .onChange(of: state.navigatorVisible) { _, isVisible in
-                let target = columnVisibilityTarget(navigatorVisible: isVisible)
-                guard columnVisibility != target else { return }
-                columnVisibilityUpdateToken &+= 1
-                let token = columnVisibilityUpdateToken
-                if didAppear {
-                    withAnimation(.easeInOut(duration: 0.15)) {
-                        columnVisibility = target
-                    }
-                } else {
-                    var transaction = Transaction()
-                    transaction.disablesAnimations = true
-                    withTransaction(transaction) {
-                        columnVisibility = target
-                    }
-                }
-                DispatchQueue.main.async {
-                    // Only clear if no newer update has started
-                    if columnVisibilityUpdateToken == token {
-                        columnVisibilityUpdateToken = 0
-                    }
-                }
-            }
-            .onChange(of: columnVisibility) { _, newValue in
-                guard didAppear, columnVisibilityUpdateToken == 0 else { return }
-                // Always 2-column: .all or .doubleColumn means navigator visible
-                let isVisible = (newValue == .all || newValue == .doubleColumn)
-                if state.navigatorVisible != isVisible {
-                    state.navigatorVisible = isVisible
-                }
-            }
             .onChange(of: state.contentColumnVisible) { _, _ in
-                // Reset column visibility to match the new layout mode
-                let target = columnVisibilityTarget(navigatorVisible: state.navigatorVisible)
-                columnVisibilityUpdateToken &+= 1
-                let token = columnVisibilityUpdateToken
-                if didAppear {
-                    withAnimation(.easeInOut(duration: 0.15)) {
-                        columnVisibility = target
-                    }
-                }
                 state.savePanelState()
-                DispatchQueue.main.async {
-                    if columnVisibilityUpdateToken == token {
-                        columnVisibilityUpdateToken = 0
-                    }
-                }
             }
             .onChange(of: state.windowAppearance) { _, newValue in
                 applyAppearance(newValue)
@@ -640,12 +593,6 @@ private struct ShellLifecycleModifier<
             .onChange(of: state.vibrancyMaterial) { _, _ in
                 state.saveAppearance()
             }
-    }
-
-    /// Compute the correct NavigationSplitViewVisibility.
-    /// Always 2-column: navigator visible → .all, hidden → .detailOnly.
-    private func columnVisibilityTarget(navigatorVisible: Bool) -> NavigationSplitViewVisibility {
-        navigatorVisible ? .all : .detailOnly
     }
 
     #if os(macOS)
