@@ -35,3 +35,7 @@ All notable changes to Kelyphos are documented here. The format follows [Keep a 
 - KelyphosDemo — 34 interactive HIG component pages across 8 sections
 - Widget integration with `WidgetCenter.shared.reloadAllTimelines()`
 - iPadOS support: `.ultraThinMaterial` vibrancy, capped Dynamic Type, trailing inspector overlay
+
+### Fixed
+
+- Use native `.inspector` on iPadOS by attaching it to NavigationSplitView (outer level) instead of the detail column, avoiding the system sidebar toggle disappearance (FB20061260)
