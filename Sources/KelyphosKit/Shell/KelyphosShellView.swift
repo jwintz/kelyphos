@@ -66,6 +66,16 @@ public struct KelyphosShellView<
 
     private let appearanceObserver = AppearanceObserver()
 
+    /// Maps `windowAppearance` to a SwiftUI `ColorScheme` for iOS.
+    /// Returns nil for "auto" so the system default is used.
+    private var preferredScheme: ColorScheme? {
+        switch state.windowAppearance {
+        case "light": return .light
+        case "dark": return .dark
+        default: return nil
+        }
+    }
+
     private var inspectorVisibleBinding: Binding<Bool> {
         Binding(
             get: { state.inspectorVisible && state.inspectorEnabled },
@@ -101,6 +111,12 @@ public struct KelyphosShellView<
     public var body: some View {
         mainContent
             .navigationSplitViewStyle(.balanced)
+            #if !os(macOS)
+            .inspector(isPresented: inspectorVisibleBinding) {
+                inspectorContent
+                    .transaction { $0.animation = nil }
+            }
+            #endif
             #if os(macOS)
             .navigationTitle(state.title)
             .navigationSubtitle(state.subtitle)
@@ -132,9 +148,13 @@ public struct KelyphosShellView<
             .environment(\.kelyphosShellState, state)
             .environment(\.kelyphosKeybindingRegistry, keybindingRegistry)
             .environment(\.kelyphosCommandPaletteRegistry, commandPaletteRegistry)
-            #if os(macOS)
             .focusedSceneValue(\.kelyphosShellState, state)
-            #else
+            #if !os(macOS)
+            .preferredColorScheme(preferredScheme)
+            .onChange(of: state.windowAppearance) { _, newMode in
+                state.colorTheme.refreshAppearance()
+                state.saveAppearance()
+            }
             .sheet(isPresented: $state.showWelcome) {
                 if let welcomeBuilder = configuration.welcomeView {
                     welcomeBuilder()
@@ -164,10 +184,43 @@ public struct KelyphosShellView<
     }
 
     /// Wraps detailContentBase with an optional leading content column,
-    /// then applies toolbar and inspector at the outermost level so they
-    /// remain direct children of the NavigationSplitView detail slot.
+    /// then applies the detail toolbar at the outermost level of the
+    /// NavigationSplitView detail slot. The native iOS inspector is
+    /// attached at the split-view root to preserve system toolbar behavior.
     @ViewBuilder
     private var detailWithContentColumn: some View {
+        #if os(macOS)
+        detailColumnLayout
+            .toolbar { trailingToolbar }
+            .inspector(isPresented: inspectorVisibleBinding) {
+                inspectorContent
+                    .transaction { $0.animation = nil }
+            }
+        #else
+        detailColumnLayout
+            .navigationTitle(state.title)
+            .toolbarTitleDisplayMode(.inline)
+            .toolbar { iOSTrailingToolbar }
+        .sheet(isPresented: $showingSettings) {
+            if let settingsBuilder = configuration.settingsView {
+                NavigationStack {
+                    settingsBuilder()
+                        .navigationTitle("Settings")
+                        .navigationBarTitleDisplayMode(.inline)
+                        .toolbar {
+                            ToolbarItem(placement: .confirmationAction) {
+                                Button("Done") { showingSettings = false }
+                            }
+                        }
+                }
+                .presentationDetents([.medium, .large], selection: $settingsDetent)
+            }
+        }
+        #endif
+    }
+
+    @ViewBuilder
+    private var detailColumnLayout: some View {
         Group {
             if configuration.content != nil {
                 // Structural branch: always HStack when content closure is provided.
@@ -188,36 +241,6 @@ public struct KelyphosShellView<
                 detailContentBase
             }
         }
-        #if os(macOS)
-        .toolbar { trailingToolbar }
-        .inspector(isPresented: inspectorVisibleBinding) {
-            inspectorContent
-                .transaction { $0.animation = nil }
-        }
-        #else
-        .navigationTitle(state.title)
-        .toolbarTitleDisplayMode(.inline)
-        .toolbar { iOSTrailingToolbar }
-        .inspector(isPresented: inspectorVisibleBinding) {
-            inspectorContent
-                .transaction { $0.animation = nil }
-        }
-        .sheet(isPresented: $showingSettings) {
-            if let settingsBuilder = configuration.settingsView {
-                NavigationStack {
-                    settingsBuilder()
-                        .navigationTitle("Settings")
-                        .navigationBarTitleDisplayMode(.inline)
-                        .toolbar {
-                            ToolbarItem(placement: .confirmationAction) {
-                                Button("Done") { showingSettings = false }
-                            }
-                        }
-                }
-                .presentationDetents([.medium, .large], selection: $settingsDetent)
-            }
-        }
-        #endif
     }
 
     private var sidebarContent: some View {
@@ -229,6 +252,9 @@ public struct KelyphosShellView<
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         #if !os(macOS)
         .dynamicTypeSize(.xSmall ... .medium)
+        #endif
+        .navigationSplitViewColumnWidth(ideal: KelyphosDesign.Width.sidebarIdeal)
+        #if !os(macOS)
         .toolbar {
             if configuration.settingsView != nil {
                 ToolbarItem(placement: .topBarTrailing) {
@@ -241,7 +267,6 @@ public struct KelyphosShellView<
             }
         }
         #endif
-        .navigationSplitViewColumnWidth(ideal: KelyphosDesign.Width.sidebarIdeal)
         .background {
             GeometryReader { geo in
                 Color.clear

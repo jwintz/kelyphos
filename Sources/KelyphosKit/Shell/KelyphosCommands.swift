@@ -89,6 +89,22 @@ public struct KelyphosCommands: Commands {
                 .keyboardShortcut("p", modifiers: [.command, .shift])
             }
 
+            Divider()
+
+            // Keybindings Overlay
+            // On macOS this is also intercepted by the NSEvent monitor
+            // (to beat the Help-menu reservation), but the Commands button
+            // is the only path on iPadOS with a hardware keyboard.
+            Section {
+                Button("Keyboard Shortcuts") {
+                    guard let state else { return }
+                    withAnimation(.easeInOut(duration: 0.15)) {
+                        state.showKeybindingsOverlay.toggle()
+                    }
+                }
+                .keyboardShortcut("/", modifiers: [.command, .shift])
+            }
+
         }
 
         // P27: Remove Help menu entirely so CMD+SHIFT+/ doesn't get intercepted.

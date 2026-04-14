@@ -21,51 +21,65 @@ public struct AppearanceSettingsSection: View {
     }
 
     public var body: some View {
-        Section("Window") {
-            LabeledContent("Appearance") {
-                Picker("Appearance", selection: $state.windowAppearance) {
-                    Label("Auto", systemImage: "circle.lefthalf.filled").tag("auto")
-                    Label("Light", systemImage: "sun.max.fill").tag("light")
-                    Label("Dark", systemImage: "moon.fill").tag("dark")
-                }
-                .pickerStyle(.segmented)
-                .labelsHidden()
-            }
+        Group {
+            #if os(macOS)
+            Section("Window") {
+                appearancePicker
 
-            LabeledContent("Opacity") {
-                HStack(spacing: 8) {
-                    Slider(value: $state.backgroundAlpha, in: 0...1)
-                    Text("\(Int(state.backgroundAlpha * 100))%")
-                        .monospacedDigit()
-                        .foregroundStyle(.secondary)
-                        .frame(width: 35, alignment: .trailing)
-                }
-            }
-
-            LabeledContent("Vibrancy") {
-                Picker("Material", selection: $state.vibrancyMaterial) {
-                    ForEach(VibrancyMaterial.allCases, id: \.self) { material in
-                        Text(material.rawValue.capitalized).tag(material)
+                LabeledContent("Opacity") {
+                    HStack(spacing: 8) {
+                        Slider(value: $state.backgroundAlpha, in: 0...1)
+                        Text("\(Int(state.backgroundAlpha * 100))%")
+                            .monospacedDigit()
+                            .foregroundStyle(.secondary)
+                            .frame(width: 35, alignment: .trailing)
                     }
                 }
-                .labelsHidden()
-                .frame(maxWidth: .infinity, alignment: .leading)
-            }
-        }
 
-        Section("Presets") {
-            LabeledContent("Presets") {
-                Picker("Presets", selection: presetBinding) {
-                    Text("Clear").tag(Optional(AppearancePreset.clear))
-                    Text("Balanced").tag(Optional(AppearancePreset.balanced))
-                    Text("Solid").tag(Optional(AppearancePreset.solid))
+                LabeledContent("Vibrancy") {
+                    Picker("Material", selection: $state.vibrancyMaterial) {
+                        ForEach(VibrancyMaterial.allCases, id: \.self) { material in
+                            Text(material.rawValue.capitalized).tag(material)
+                        }
+                    }
+                    .labelsHidden()
+                    .frame(maxWidth: .infinity, alignment: .leading)
                 }
-                .pickerStyle(.segmented)
-                .labelsHidden()
             }
+
+            Section("Presets") {
+                LabeledContent("Presets") {
+                    Picker("Presets", selection: presetBinding) {
+                        Text("Clear").tag(Optional(AppearancePreset.clear))
+                        Text("Balanced").tag(Optional(AppearancePreset.balanced))
+                        Text("Solid").tag(Optional(AppearancePreset.solid))
+                    }
+                    .pickerStyle(.segmented)
+                    .labelsHidden()
+                }
+            }
+            #else
+            Section("Appearance") {
+                appearancePicker
+            }
+            #endif
         }
         .onChange(of: state.windowAppearance) { _, _ in state.saveAppearance() }
+        #if os(macOS)
         .onChange(of: state.backgroundAlpha)  { _, _ in state.saveAppearance() }
         .onChange(of: state.vibrancyMaterial) { _, _ in state.saveAppearance() }
+        #endif
+    }
+
+    private var appearancePicker: some View {
+        LabeledContent("Appearance") {
+            Picker("Appearance", selection: $state.windowAppearance) {
+                Label("Auto", systemImage: "circle.lefthalf.filled").tag("auto")
+                Label("Light", systemImage: "sun.max.fill").tag("light")
+                Label("Dark", systemImage: "moon.fill").tag("dark")
+            }
+            .pickerStyle(.segmented)
+            .labelsHidden()
+        }
     }
 }
