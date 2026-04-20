@@ -16,3 +16,6 @@ DerivedData/
 
 pixi.lock
 FINDINGS.md
+
+*.dmg
+*.app

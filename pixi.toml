@@ -5,27 +5,51 @@ description = "A SwiftUI shell framework for macOS and iPadOS apps"
 channels = ["conda-forge"]
 platforms = ["osx-arm64", "osx-64"]
 
+[dependencies]
+go-gum = ">=0.14"
+
+# Shared app identity — consumed by the local Scripts/swiftui_*.sh helpers.
+[activation.env]
+APP         = "KelyphosDemo"
+PROJECT     = "Kelyphos"
+SCHEME      = "KelyphosDemo"
+BINARY      = "KelyphosDemo"
+WATCH_PATHS = "Sources Tests Kelyphos.icon project.yml"
+EXTRA_BUILD_ARGS = "-skipPackagePluginValidation"
+
 [tasks]
-# Force-regenerate the Xcode project from project.yml (always runs XcodeGen).
+# -- Xcode project generation --
+
 generate = "swift run xcodegen generate --spec project.yml"
 
 # Regenerate when the Xcode spec or source tree changed since the last generation.
-# This keeps the project in sync after file additions, removals, or moves.
 generate-if-needed = "bash -c 'PROJECT=Kelyphos.xcodeproj/project.pbxproj; if [ ! -f \"$PROJECT\" ] || [ -n \"$(find project.yml Sources Tests Kelyphos.icon -newer \"$PROJECT\" -print -quit 2>/dev/null)\" ]; then swift run xcodegen generate --spec project.yml; else echo \"Xcode project up to date.\"; fi'"
 
-# Always build (use for forced rebuild).
-build = { cmd = "xcodebuild -project Kelyphos.xcodeproj -scheme KelyphosDemo -configuration Debug build -allowProvisioningUpdates -skipPackagePluginValidation", depends-on = ["generate-if-needed"], env = { SDKROOT = "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk" } }
+# -- Build --
 
-# Build only when sources, project, or resources are newer than the built binary.
-build-if-needed = { cmd = "bash -c 'BUILT=$(xcodebuild -project Kelyphos.xcodeproj -scheme KelyphosDemo -configuration Debug -showBuildSettings 2>/dev/null | grep BUILT_PRODUCTS_DIR | sed \"s/.*= //\" | head -n 1); BIN=\"$BUILT/KelyphosDemo.app/Contents/MacOS/KelyphosDemo\"; if [ -f \"$BIN\" ] && [ -z \"$(find Sources project.yml Kelyphos.xcodeproj/project.pbxproj -newer \"$BIN\" 2>/dev/null | head -1)\" ]; then echo \"Build up to date.\"; else xcodebuild -project Kelyphos.xcodeproj -scheme KelyphosDemo -configuration Debug build -allowProvisioningUpdates -skipPackagePluginValidation; fi'", depends-on = ["generate-if-needed"], env = { SDKROOT = "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk" } }
+build                   = { cmd = "bash Scripts/swiftui_build.sh",           depends-on = ["generate-if-needed"] }
+build-if-needed         = { cmd = "bash Scripts/swiftui_build_if_needed.sh", depends-on = ["generate-if-needed"] }
+build-release           = { cmd = "bash Scripts/swiftui_build.sh",           depends-on = ["generate-if-needed"], env = { CONFIG = "Release" } }
+build-release-if-needed = { cmd = "bash Scripts/swiftui_build_if_needed.sh", depends-on = ["generate-if-needed"], env = { CONFIG = "Release" } }
 
-# Run unit tests.
-test = { cmd = "xcodebuild -project Kelyphos.xcodeproj -scheme KelyphosDemo -configuration Debug test -allowProvisioningUpdates -skipPackagePluginValidation -destination 'platform=macOS'", depends-on = ["generate-if-needed"], env = { SDKROOT = "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk" } }
+# -- Test --
 
-# Build if needed, launch app.
-# Note: uses open -a with the bundle path instead of open -W because
-# -W cannot track sandboxed app PIDs (GetProcessPID fails).
-run = { cmd = "bash -c 'BUILT=$(xcodebuild -project Kelyphos.xcodeproj -scheme KelyphosDemo -configuration Debug -showBuildSettings 2>/dev/null | grep \" BUILT_PRODUCTS_DIR = \" | sed \"s/.*= //\" | head -n 1); open \"$BUILT/KelyphosDemo.app\"'", depends-on = ["build-if-needed"], env = { SDKROOT = "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk" } }
+test = { cmd = "bash Scripts/swiftui_test.sh", depends-on = ["generate-if-needed"] }
 
-# Remove all build artifacts, derived data, and generated project for a pristine rebuild.
-distclean = "rm -rf .build Kelyphos.xcodeproj DerivedData build && xcodebuild -alltargets clean 2>/dev/null; echo 'distclean complete'"
+# -- Run --
+
+run         = { cmd = "bash Scripts/swiftui_run.sh", depends-on = ["build-if-needed"] }
+run-release = { cmd = "bash Scripts/swiftui_run.sh", depends-on = ["build-release-if-needed"], env = { CONFIG = "Release" } }
+
+# -- Release pipeline --
+
+package  = { cmd = "bash Scripts/swiftui_package.sh",  depends-on = ["build-release"] }
+sign     = { cmd = "bash Scripts/swiftui_sign.sh",     depends-on = ["package"] }
+dmg      = { cmd = "bash Scripts/swiftui_dmg.sh",      depends-on = ["sign"] }
+notarize = { cmd = "bash Scripts/swiftui_notarize.sh", depends-on = ["dmg"] }
+release  = { cmd = "echo 'Release pipeline complete.'", depends-on = ["notarize"] }
+
+# -- Changelog & cleanup --
+
+changelog = "bash Scripts/swiftui_changelog.sh"
+distclean = "rm -rf .build Kelyphos.xcodeproj DerivedData build KelyphosDemo.app KelyphosDemo-*.dmg && xcodebuild -alltargets clean 2>/dev/null; echo 'distclean complete'"
