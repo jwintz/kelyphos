@@ -2,9 +2,10 @@
 # WORKSPACE-SYNCED from Syntropment devops scripts; refresh with `pixi run sync-scripts-all` in the workspace.
 # Shared output helpers for Syntropment shell scripts.
 #
-# Sourced by every swiftui_*.sh, status.sh, and for_each_swiftui.sh. The
-# default output is ASCII-first for readability across terminal themes.
-# Set SYNTROPMENT_UI=gum to opt into gum styling when desired.
+# Sourced by every swiftui_*.sh, status.sh, and for_each_swiftui.sh. Gum is
+# enabled by default when available and a TTY is attached, using the terminal's
+# base ANSI palette so it follows the active theme. Set SYNTROPMENT_UI=plain to
+# force plain ASCII output.
 #
 # Helper contract:
 #   say_header "Title"     # section title
@@ -20,9 +21,27 @@
 
 _has_gum() { command -v gum >/dev/null 2>&1; }
 
-# Enable styling only when explicitly requested with SYNTROPMENT_UI=gum.
+_gum_color() {
+    case "$1" in
+        header) printf '6' ;;
+        step)   printf '4' ;;
+        ok)     printf '2' ;;
+        warn)   printf '3' ;;
+        err)    printf '1' ;;
+        key)    printf '6' ;;
+        value)  printf '7' ;;
+        *)      return 1 ;;
+    esac
+}
+
+# Enable gum by default when available. Allow opting out with
+# SYNTROPMENT_UI=plain / ascii / none / off.
 _use_gum() {
-    [ "${SYNTROPMENT_UI:-}" != "gum" ] && return 1
+    case "${SYNTROPMENT_UI:-auto}" in
+        plain|ascii|none|off|0|false)
+            return 1
+            ;;
+    esac
     [ -n "${NO_COLOR:-}" ] && return 1
     [ ! -t 1 ] && return 1
     _has_gum
@@ -31,7 +50,7 @@ _use_gum() {
 say_header() {
     if _use_gum; then
         printf '\n'
-        gum style --foreground 212 --bold -- "$*"
+        gum style --foreground "$(_gum_color header)" --bold -- "== $* =="
     else
         printf '\n== %s ==\n' "$*"
     fi
@@ -39,7 +58,7 @@ say_header() {
 
 say_step() {
     if _use_gum; then
-        gum style --foreground 45 -- "-> $*"
+        gum style --foreground "$(_gum_color step)" -- "-> $*"
     else
         printf -- '-> %s\n' "$*"
     fi
@@ -47,7 +66,7 @@ say_step() {
 
 say_ok() {
     if _use_gum; then
-        gum style --foreground 82 -- "OK  $*"
+        gum style --foreground "$(_gum_color ok)" --bold -- "OK  $*"
     else
         printf 'OK  %s\n' "$*"
     fi
@@ -55,7 +74,7 @@ say_ok() {
 
 say_warn() {
     if _use_gum; then
-        gum style --foreground 214 -- "WARN $*" >&2
+        gum style --foreground "$(_gum_color warn)" --bold -- "WARN $*" >&2
     else
         printf 'WARN %s\n' "$*" >&2
     fi
@@ -63,7 +82,7 @@ say_warn() {
 
 say_err() {
     if _use_gum; then
-        gum style --foreground 196 --bold -- "ERR  $*" >&2
+        gum style --foreground "$(_gum_color err)" --bold -- "ERR  $*" >&2
     else
         printf 'ERR  %s\n' "$*" >&2
     fi
@@ -74,8 +93,8 @@ say_kv() {
     local v="$*"
     if _use_gum; then
         printf '  %s %s\n' \
-            "$(gum style --foreground 244 -- "$(printf '%-20s' "$k")")" \
-            "$(gum style --foreground 252 -- "$v")"
+            "$(gum style --foreground "$(_gum_color key)" --bold -- "$(printf '%-20s' "$k")")" \
+            "$(gum style --foreground "$(_gum_color value)" -- "$v")"
     else
         printf '  %-20s %s\n' "$k" "$v"
     fi
