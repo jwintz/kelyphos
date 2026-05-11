@@ -83,11 +83,10 @@ public struct KelyphosPanelTabBar<Tab: KelyphosPanel>: View {
                             if tab == effective {
                                 switch selectionStyle {
                                 case .material:
-                                    Capsule().fill(.regularMaterial)
+                                    ContainerRelativeShape().fill(.regularMaterial)
                                 case .opaque:
-                                    Capsule().fill(.background)
+                                    ContainerRelativeShape().fill(.background)
                                         .shadow(color: .primary.opacity(0.15), radius: 1, y: 0.5)
-                                        .drawingGroup() // consolidate shadow layer with fill
                                 }
                             }
                         }
@@ -99,6 +98,10 @@ public struct KelyphosPanelTabBar<Tab: KelyphosPanel>: View {
                 }
                 .padding(3)
                 .frame(maxWidth: .infinity)
+                // Establish a capsule container so each selected segment's
+                // ContainerRelativeShape inherits a concentric capsule corner
+                // instead of a Capsule sized to its own (smaller) height.
+                .containerShape(.capsule)
                 .glassEffect(in: .capsule)
                 .overlay {
                     if showBorder {
