@@ -72,6 +72,10 @@ public struct KelyphosPanelTabBar<Tab: KelyphosPanel>: View {
                                 .font(.system(size: KelyphosDesign.FontSize.body))
                                 .frame(maxWidth: .infinity)
                                 .padding(.vertical, 5)
+                                // Extend the hit-test region to the full segment.
+                                // With `.plain` button style the tap target collapses
+                                // to the visible text otherwise.
+                                .contentShape(Rectangle())
                         }
                         .buttonStyle(.plain)
                         .foregroundStyle(tab == effective ? .primary : .secondary)

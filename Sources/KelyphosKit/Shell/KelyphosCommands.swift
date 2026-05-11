@@ -115,9 +115,17 @@ public struct KelyphosCommands: Commands {
 
     // MARK: - Tab Button Helpers (P16: toggle-if-current)
 
+    // The tab counts (state.navigatorTabCount etc.) are populated inside the
+    // shell's `.onAppear`. Commands is evaluated against the scene context
+    // before any view mount, so `.disabled(n > tabCount)` would lock all
+    // digit shortcuts as disabled at registration time — and on iPadOS,
+    // `.keyboardShortcut` does not rebind once `.disabled` flips back to
+    // false. We register the shortcut unconditionally and bail at fire time
+    // for out-of-range indices.
+
     private func navTab(_ n: Int) -> some View {
         Button("Navigator Tab \(n)") {
-            guard let state else { return }
+            guard let state, n <= state.navigatorTabCount else { return }
             let idx = n - 1
             if state.navigatorVisible && state.selectedNavigatorIndex == idx {
                 withAnimation(.easeInOut(duration: 0.15)) {
@@ -131,12 +139,11 @@ public struct KelyphosCommands: Commands {
             }
         }
         .keyboardShortcut(KeyEquivalent(Character("\(n)")), modifiers: .command)
-        .disabled(n > (state?.navigatorTabCount ?? 0))
     }
 
     private func inspTab(_ n: Int) -> some View {
         Button("Inspector Tab \(n)") {
-            guard let state else { return }
+            guard let state, n <= state.inspectorTabCount else { return }
             let idx = n - 1
             if state.inspectorVisible && state.selectedInspectorIndex == idx {
                 withAnimation(.easeInOut(duration: 0.15)) {
@@ -150,12 +157,11 @@ public struct KelyphosCommands: Commands {
             }
         }
         .keyboardShortcut(KeyEquivalent(Character("\(n)")), modifiers: [.command, .option])
-        .disabled(n > (state?.inspectorTabCount ?? 0))
     }
 
     private func utilTab(_ n: Int) -> some View {
         Button("Utility Tab \(n)") {
-            guard let state else { return }
+            guard let state, n <= state.utilityTabCount else { return }
             let idx = n - 1
             if state.utilityAreaVisible && state.selectedUtilityIndex == idx {
                 withAnimation(.easeInOut(duration: 0.15)) {
@@ -169,6 +175,5 @@ public struct KelyphosCommands: Commands {
             }
         }
         .keyboardShortcut(KeyEquivalent(Character("\(n)")), modifiers: [.command, .option, .shift])
-        .disabled(n > (state?.utilityTabCount ?? 0))
     }
 }

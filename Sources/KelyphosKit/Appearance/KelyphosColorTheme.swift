@@ -16,6 +16,8 @@ public protocol KelyphosColorThemeProtocol: AnyObject, Sendable {
     @MainActor var isDark: Bool { get }
     /// Called by AppearanceObserver when the system appearance changes.
     @MainActor func refreshAppearance()
+    /// Called to force a specific appearance mode.
+    @MainActor func refreshAppearance(isDark: Bool?)
 }
 
 // MARK: - Default Implementation
@@ -42,7 +44,12 @@ public final class KelyphosColorTheme: KelyphosColorThemeProtocol {
 
     /// Call this when the system appearance changes.
     public func refreshAppearance() {
-        isDark = Self.systemIsDarkMode()
+        refreshAppearance(isDark: nil)
+    }
+
+    /// Call this when the system appearance changes, or to force a specific mode.
+    public func refreshAppearance(isDark: Bool?) {
+        self.isDark = isDark ?? Self.systemIsDarkMode()
     }
 
     // MARK: - Active Variant

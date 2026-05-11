@@ -56,6 +56,7 @@ public struct KelyphosShellView<
     @State private var settingsDetent: PresentationDetent = .large
 
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
+    @Environment(\.colorScheme) private var colorScheme
 
     @State private var navigatorItems: [NavTab] = []
     @State private var navigatorSelection: NavTab?
@@ -63,6 +64,7 @@ public struct KelyphosShellView<
     @State private var inspectorSelection: InspTab?
     @State private var keybindingRegistry: KelyphosKeybindingRegistry
     @State private var commandPaletteRegistry: KelyphosCommandPaletteRegistry
+    @FocusState private var isFocused: Bool
 
     private let appearanceObserver = AppearanceObserver()
 
@@ -140,7 +142,8 @@ public struct KelyphosShellView<
                 inspectorSelection: $inspectorSelection,
                 configuration: configuration,
                 appearanceObserver: appearanceObserver,
-                horizontalSizeClass: horizontalSizeClass
+                horizontalSizeClass: horizontalSizeClass,
+                colorScheme: colorScheme
             ))
             .overlay { keybindingsOverlay }
             .overlay { commandPaletteOverlay }
@@ -149,6 +152,10 @@ public struct KelyphosShellView<
             .environment(\.kelyphosKeybindingRegistry, keybindingRegistry)
             .environment(\.kelyphosCommandPaletteRegistry, commandPaletteRegistry)
             .focusedSceneValue(\.kelyphosShellState, state)
+            .focused($isFocused)
+            .onAppear {
+                isFocused = true
+            }
             #if !os(macOS)
             .preferredColorScheme(preferredScheme)
             .onChange(of: state.windowAppearance) { _, newMode in
@@ -531,6 +538,7 @@ private struct ShellLifecycleModifier<
     let configuration: KelyphosShellConfiguration<NavTab, InspTab, UtilTab, ContentCol, Detail>
     let appearanceObserver: AppearanceObserver
     var horizontalSizeClass: UserInterfaceSizeClass?
+    var colorScheme: ColorScheme
 
     @State private var columnVisibilityUpdateToken: Int = 0
 
@@ -566,8 +574,8 @@ private struct ShellLifecycleModifier<
                     didAppear = true
                 }
                 appearanceObserver.start(updating: state.colorTheme)
-                #if os(macOS)
                 applyAppearance(state.windowAppearance)
+                #if os(macOS)
                 installKeyMonitor()
                 #endif
             }
@@ -656,6 +664,15 @@ private struct ShellLifecycleModifier<
                     }
                 }
             }
+            .onChange(of: colorScheme) { _, newValue in
+                #if !os(macOS)
+                if state.windowAppearance == "auto" {
+                    state.colorTheme.refreshAppearance(isDark: newValue == .dark)
+                } else {
+                    state.colorTheme.refreshAppearance(isDark: state.windowAppearance == "dark")
+                }
+                #endif
+            }
             .onChange(of: state.windowAppearance) { _, newValue in
                 applyAppearance(newValue)
             }
@@ -727,8 +744,14 @@ private struct ShellLifecycleModifier<
         default: nsAppearance = nil
         }
         NSApp.appearance = nsAppearance
-        #endif
         state.colorTheme.refreshAppearance()
+        #else
+        switch mode {
+        case "light": state.colorTheme.refreshAppearance(isDark: false)
+        case "dark": state.colorTheme.refreshAppearance(isDark: true)
+        default: state.colorTheme.refreshAppearance(isDark: colorScheme == .dark)
+        }
+        #endif
         state.saveAppearance()
     }
 }

@@ -12,12 +12,12 @@ A cross-platform SwiftUI shell framework for building professional multi-panel a
 
 ## Package Structure
 
-| Target | Type | Description |
-|--------|------|-------------|
-| `KelyphosKit` | Library | Reusable shell framework — panels, navigation, theming, keybindings |
-| `KelyphosDemo` | Executable | HIG component showcase app with 34 interactive demo pages |
-| `KelyphosWidget` | App Extension | Desktop widget (Small / Medium / Large / Extra Large) — built via XcodeGen project |
-| `KelyphosKitTests` | Tests | Unit tests for KelyphosKit |
+| Target             | Type          | Description                                                                        |
+| ------------------ | ------------- | ---------------------------------------------------------------------------------- |
+| `KelyphosKit`      | Library       | Reusable shell framework — panels, navigation, theming, keybindings                |
+| `KelyphosDemo`     | Executable    | HIG component showcase app with 34 interactive demo pages                          |
+| `KelyphosWidget`   | App Extension | Desktop widget (Small / Medium / Large / Extra Large) — built via XcodeGen project |
+| `KelyphosKitTests` | Tests         | Unit tests for KelyphosKit                                                         |
 
 ## Quick Start
 
